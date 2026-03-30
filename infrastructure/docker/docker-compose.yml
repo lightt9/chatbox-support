@@ -1,0 +1,69 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: chatbox-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: chatbox
+      POSTGRES_PASSWORD: chatbox_secret
+      POSTGRES_DB: chatbox_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatbox -d chatbox_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatbox-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: chatbox-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatbox-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: chatbox-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - chatbox-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: chatbox-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - chatbox-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  chatbox-network:
+    driver: bridge

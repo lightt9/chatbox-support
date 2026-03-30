@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@chatbox/shared-types": ["packages/shared-types/src"],
+      "@chatbox/db-schema": ["packages/db-schema/src"],
+      "@chatbox/channel-sdk": ["packages/channel-sdk/src"],
+      "@chatbox/utils": ["packages/utils/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}
