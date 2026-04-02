@@ -6,8 +6,13 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ChatBox - Support Admin',
-  description: 'ChatBox Support Administration Dashboard',
+  title: 'Voiaj - Support Admin',
+  description: 'Voiaj Support Administration Dashboard',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
