@@ -6,11 +6,16 @@ import {
   HttpCode,
   HttpStatus,
   UnauthorizedException,
+  Request,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
-import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { SocialLoginDto } from './dto/social-login.dto';
+
+class RefreshDto {
+  refreshToken: string;
+}
 
 @Controller('api/v1/auth')
 export class AuthController {
@@ -31,17 +36,36 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  @Post('social')
+  @HttpCode(HttpStatus.OK)
+  async socialLogin(@Body() dto: SocialLoginDto) {
+    const user = await this.authService.validateSocialUser({
+      provider: dto.provider,
+      providerId: dto.providerId,
+      email: dto.email,
+      name: dto.name,
+      avatarUrl: dto.avatarUrl,
+    });
+
+    if (!user) {
+      throw new UnauthorizedException(
+        'Unable to sign in. Your account may be inactive.',
+      );
+    }
+
+    return this.authService.login(user);
+  }
+
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refresh(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refresh(refreshToken);
+  async refresh(@Body() dto: RefreshDto) {
+    return this.authService.refresh(dto.refreshToken);
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
-  async logout(@CurrentUser() user: any) {
-    // TODO: Implement token invalidation (e.g., add to blacklist in Redis)
+  async logout(@Request() req: any) {
     return { message: 'Logged out successfully' };
   }
 }

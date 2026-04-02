@@ -12,6 +12,7 @@
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
+    --primary-hex: #3b82f6;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
@@ -26,26 +27,55 @@
     --radius: 0.5rem;
   }
 
+  /*
+   * PREMIUM DARK THEME
+   *
+   * 3-layer system with LARGE gaps between each level:
+   *
+   * Layer 1 — background  L:10%  #151b23  (app shell, sidebar)
+   * Layer 2 — card        L:14%  #1c2433  (cards, panels, header)
+   * Layer 3 — popover     L:19%  #263040  (modals, dropdowns, elevated)
+   *
+   * muted (hover/accent)  L:17%  #222d3d  (hover states, subtle bg)
+   *
+   * Text:
+   * foreground       L:93%  #e8ecf0  (primary text — near white)
+   * card-foreground  L:88%  #d4dbe4  (body text — clearly readable)
+   * muted-foreground L:60%  #8a95a5  (labels — visible, not faded)
+   *
+   * Borders:          L:22%  #2d3848  (clearly visible separators)
+   * Input borders:    L:25%  #343f50  (distinct from background)
+   */
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --background: 216 22% 10%;
+    --foreground: 210 18% 93%;
+
+    --card: 216 22% 14%;
+    --card-foreground: 210 18% 88%;
+
+    --popover: 214 22% 19%;
+    --popover-foreground: 210 18% 93%;
+
     --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 20% 17%;
+    --secondary-foreground: 210 16% 88%;
+
+    --muted: 214 20% 17%;
+    --muted-foreground: 214 12% 60%;
+
+    --accent: 214 20% 17%;
+    --accent-foreground: 210 16% 88%;
+
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 16% 22%;
+    --input: 214 16% 25%;
+
+    --ring: 217 91% 60%;
   }
 }
 
@@ -54,6 +84,33 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+  html {
+    transition: color 0.3s ease, background-color 0.3s ease;
+  }
+}
+
+@layer utilities {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md
+           bg-primary px-4 py-2 text-sm font-medium text-primary-foreground
+           transition-all duration-200 ease-out
+           hover:brightness-110 hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02]
+           active:scale-[0.97] active:brightness-95
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md
+           border border-input bg-background px-4 py-2 text-sm font-medium
+           transition-all duration-200 ease-out
+           hover:bg-muted hover:scale-[1.02] hover:shadow-sm
+           active:scale-[0.97];
+  }
+
+  .card-interactive {
+    @apply transition-all duration-200 ease-out
+           hover:-translate-y-0.5 hover:shadow-md;
   }
 }

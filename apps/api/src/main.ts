@@ -1,19 +1,23 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import helmet from 'helmet';
 import compression from 'compression';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('API_PORT', 3001);
 
-  app.use(helmet());
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
+
+  app.use(helmet({ crossOriginResourcePolicy: false }));
   app.use(compression());
 
   app.enableCors({

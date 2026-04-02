@@ -29,5 +29,11 @@ logs/
 # Testing
 coverage/
 
+# Uploads (user-generated content)
+apps/api/uploads/
+
 # Docker volumes
 infrastructure/docker/data/
+
+# Next.js generated types
+apps/admin/next-env.d.ts

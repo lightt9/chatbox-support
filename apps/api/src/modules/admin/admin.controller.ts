@@ -2,57 +2,48 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Patch,
   Body,
   Param,
+  ParseUUIDPipe,
   UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AdminService } from './admin.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('api/v1/admin/users')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
+@UseGuards(AuthGuard('jwt'))
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get()
-  async findAll() {
-    // TODO: Implement list admin/agent users
-    return { message: 'TODO: List admin users' };
+  findAll() {
+    return this.adminService.findAllUsers();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    // TODO: Implement get user by id
-    return { message: `TODO: Get admin user ${id}` };
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.findOneUser(id);
   }
 
   @Post()
-  async create(@Body() body: any) {
-    // TODO: Implement create admin/agent user
-    return { message: 'TODO: Create admin user' };
+  create(@Body() dto: CreateUserDto) {
+    return this.adminService.createUser(dto);
   }
 
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() body: any) {
-    // TODO: Implement update user
-    return { message: `TODO: Update admin user ${id}` };
+  @Patch(':id')
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateUserDto,
+  ) {
+    return this.adminService.updateUser(id, dto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    // TODO: Implement delete user
-    return { message: `TODO: Delete admin user ${id}` };
-  }
-
-  @Patch(':id/role')
-  async updateRole(@Param('id') id: string, @Body() body: any) {
-    // TODO: Implement update user role
-    return { message: `TODO: Update role for user ${id}` };
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.adminService.removeUser(id);
   }
 }

@@ -1,70 +1,219 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { eq, and } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
+import { DATABASE } from '../../../config/database.module';
+import { adminUsers } from '../../../database/schema';
+import { companies } from '../../../database/schema';
+
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  name: string;
+  role: string;
+  companyId: string;
+}
+
+interface SocialProfile {
+  provider: 'google' | 'facebook' | 'apple';
+  providerId: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(DATABASE) private readonly db: any,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
-    // TODO: Look up user by email from database
-    // TODO: Compare password hash with bcrypt
-    // const user = await this.usersService.findByEmail(email);
-    // if (user && await bcrypt.compare(password, user.passwordHash)) {
-    //   const { passwordHash, ...result } = user;
-    //   return result;
-    // }
-    return null;
+  async validateUser(email: string, password: string) {
+    const [user] = await this.db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.email, email))
+      .limit(1);
+
+    if (!user || !user.active) {
+      return null;
+    }
+
+    if (!user.password_hash) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    // Update last_login_at
+    await this.db
+      .update(adminUsers)
+      .set({ last_login_at: new Date(), updated_at: new Date() })
+      .where(eq(adminUsers.id, user.id));
+
+    const { password_hash, ...result } = user;
+    return result;
+  }
+
+  async validateSocialUser(profile: SocialProfile) {
+    // 1. Try to find by provider + providerId
+    const [existingByProvider] = await this.db
+      .select()
+      .from(adminUsers)
+      .where(
+        and(
+          eq(adminUsers.auth_provider, profile.provider),
+          eq(adminUsers.auth_provider_id, profile.providerId),
+        ),
+      )
+      .limit(1);
+
+    if (existingByProvider) {
+      if (!existingByProvider.active) {
+        return null;
+      }
+      await this.db
+        .update(adminUsers)
+        .set({
+          last_login_at: new Date(),
+          updated_at: new Date(),
+          avatar_url: profile.avatarUrl ?? existingByProvider.avatar_url,
+        })
+        .where(eq(adminUsers.id, existingByProvider.id));
+
+      const { password_hash, ...result } = existingByProvider;
+      return result;
+    }
+
+    // 2. Try to find by email — link the social provider to the existing account
+    const [existingByEmail] = await this.db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.email, profile.email))
+      .limit(1);
+
+    if (existingByEmail) {
+      if (!existingByEmail.active) {
+        return null;
+      }
+      await this.db
+        .update(adminUsers)
+        .set({
+          auth_provider: profile.provider,
+          auth_provider_id: profile.providerId,
+          avatar_url: profile.avatarUrl ?? existingByEmail.avatar_url,
+          last_login_at: new Date(),
+          updated_at: new Date(),
+        })
+        .where(eq(adminUsers.id, existingByEmail.id));
+
+      const { password_hash, ...result } = existingByEmail;
+      return result;
+    }
+
+    // 3. Auto-register: assign to the default demo company
+    const [defaultCompany] = await this.db
+      .select()
+      .from(companies)
+      .where(eq(companies.slug, 'chatbox-demo'))
+      .limit(1);
+
+    if (!defaultCompany) {
+      return null;
+    }
+
+    const [newUser] = await this.db
+      .insert(adminUsers)
+      .values({
+        company_id: defaultCompany.id,
+        email: profile.email,
+        name: profile.name,
+        auth_provider: profile.provider,
+        auth_provider_id: profile.providerId,
+        avatar_url: profile.avatarUrl,
+        role: 'admin',
+        active: true,
+      })
+      .returning();
+
+    const { password_hash, ...result } = newUser;
+    return result;
   }
 
   async login(user: any) {
-    const payload = {
+    const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
+      name: user.name,
       role: user.role,
-      companyId: user.companyId,
+      companyId: user.company_id,
     };
 
     return {
-      accessToken: this.jwtService.sign(payload),
-      refreshToken: this.jwtService.sign(payload, {
-        expiresIn: this.configService.get<string>(
-          'JWT_REFRESH_EXPIRES_IN',
-          '7d',
+      accessToken: this.jwtService.sign({ ...payload }),
+      refreshToken: this.jwtService.sign({ ...payload }, {
+        secret: this.configService.get<string>(
+          'JWT_REFRESH_SECRET',
+          'refresh-changeme',
         ),
+        expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d') as any,
       }),
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
+        companyId: user.company_id,
+        avatarUrl: user.avatar_url,
       },
     };
   }
 
   async refresh(refreshToken: string) {
     try {
-      const payload = this.jwtService.verify(refreshToken);
-      const newPayload = {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>(
+          'JWT_REFRESH_SECRET',
+          'refresh-changeme',
+        ),
+      });
+
+      // Verify user still exists and is active
+      const [user] = await this.db
+        .select()
+        .from(adminUsers)
+        .where(eq(adminUsers.id, payload.sub))
+        .limit(1);
+
+      if (!user || !user.active) {
+        throw new UnauthorizedException('User no longer active');
+      }
+
+      const newPayload: JwtPayload = {
         sub: payload.sub,
         email: payload.email,
-        role: payload.role,
-        companyId: payload.companyId,
+        name: user.name,
+        role: user.role,
+        companyId: user.company_id,
       };
 
       return {
-        accessToken: this.jwtService.sign(newPayload),
-        refreshToken: this.jwtService.sign(newPayload, {
-          expiresIn: this.configService.get<string>(
-            'JWT_REFRESH_EXPIRES_IN',
-            '7d',
+        accessToken: this.jwtService.sign({ ...newPayload }),
+        refreshToken: this.jwtService.sign({ ...newPayload }, {
+          secret: this.configService.get<string>(
+            'JWT_REFRESH_SECRET',
+            'refresh-changeme',
           ),
+          expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d') as any,
         }),
       };
-    } catch {
+    } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

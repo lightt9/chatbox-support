@@ -6,3 +6,5 @@ export * from './channel.js';
 export * from './escalation.js';
 export * from './report.js';
 export * from './admin.js';
+export * from './lead.js';
+export * from './widget.js';

@@ -5,8 +5,8 @@ import {
   CallHandler,
   Inject,
 } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
-import { Pool } from 'pg';
+import { Observable } from 'rxjs';
+import { sql } from 'drizzle-orm';
 import { DATABASE } from '../../config/database.module';
 
 @Injectable()
@@ -21,10 +21,8 @@ export class TenantInterceptor implements NestInterceptor {
     const user = request.user;
 
     if (user?.companyId) {
-      // Set the company_id on the PG session for RLS policies
-      // This ensures all queries in this request are scoped to the tenant
       await this.db.execute(
-        `SET LOCAL app.current_company_id = '${user.companyId}'`,
+        sql`SET LOCAL app.current_company_id = ${user.companyId}`,
       );
     }
 
