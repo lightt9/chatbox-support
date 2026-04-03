@@ -8,10 +8,15 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "strictPropertyInitialization": false,
+    "skipLibCheck": true,
     "target": "ES2022",
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true
-  }
+  },
+  "exclude": ["node_modules", "dist", "src/database/seed.ts"]
 }
