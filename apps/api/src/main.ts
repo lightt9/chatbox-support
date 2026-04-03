@@ -43,9 +43,9 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  await app.listen(port);
-  logger.log(`ChatBox-Support API is running on http://localhost:${port}`);
-  logger.log(`WebSocket gateway available at ws://localhost:${port}/chat`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`ChatBox-Support API is running on port ${port}`);
+  logger.log(`WebSocket gateway available on port ${port}/chat`);
 }
 
 bootstrap();
