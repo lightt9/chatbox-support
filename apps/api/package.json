@@ -34,7 +34,7 @@
     "class-validator": "^0.14.0",
     "compression": "^1.7.0",
     "dotenv": "^17.3.1",
-    "drizzle-orm": "^0.39.3",
+    "drizzle-orm": "^0.36.4",
     "helmet": "^8.0.0",
     "ioredis": "^5.4.0",
     "multer": "^2.1.1",

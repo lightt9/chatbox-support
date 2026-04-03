@@ -142,8 +142,8 @@ importers:
         specifier: ^17.3.1
         version: 17.3.1
       drizzle-orm:
-        specifier: ^0.39.3
-        version: 0.39.3(@types/pg@8.20.0)(pg@8.20.0)
+        specifier: ^0.36.4
+        version: 0.36.4(@types/pg@8.20.0)(pg@8.20.0)
       helmet:
         specifier: ^8.0.0
         version: 8.1.0
@@ -222,8 +222,8 @@ importers:
   packages/db-schema:
     dependencies:
       drizzle-orm:
-        specifier: ^0.39.0
-        version: 0.39.3(@types/pg@8.20.0)(pg@8.20.0)
+        specifier: ^0.36.4
+        version: 0.36.4(@types/pg@8.20.0)(pg@8.20.0)
       pg:
         specifier: ^8.13.0
         version: 8.20.0
@@ -235,8 +235,8 @@ importers:
         specifier: ^8.11.0
         version: 8.20.0
       drizzle-kit:
-        specifier: ^0.30.0
-        version: 0.30.6
+        specifier: ^0.27.2
+        version: 0.27.2
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -2199,20 +2199,17 @@ packages:
     resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
 
-  drizzle-kit@0.30.6:
-    resolution: {integrity: sha512-U4wWit0fyZuGuP7iNmRleQyK2V8wCuv57vf5l3MnG4z4fzNTjY/U13M8owyQ5RavqvqxBifWORaR3wIUzlN64g==}
+  drizzle-kit@0.27.2:
+    resolution: {integrity: sha512-0WBHBqav0mkJHMnFPMHKFMBMnSBBs7jjB0YDKF9GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKBw==}
     hasBin: true
 
-  drizzle-orm@0.39.3:
-    resolution: {integrity: sha512-EZ8ZpYvDIvKU9C56JYLOmUskazhad+uXZCTCRN4OnRMsL+xAJ05dv1eCpAG5xzhsm1hqiuC5kAZUCS924u2DTw==}
+  drizzle-orm@0.36.4:
+    resolution: {integrity: sha512-GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKB0GGKBw==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
-      '@electric-sql/pglite': '>=0.2.0'
       '@libsql/client': '>=0.10.0'
-      '@libsql/client-wasm': '>=0.10.0'
       '@neondatabase/serverless': '>=0.10.0'
-      '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
       '@planetscale/database': '>=1'
       '@prisma/client': '*'
@@ -2224,7 +2221,6 @@ packages:
       '@xata.io/client': '*'
       better-sqlite3: '>=7'
       bun-types: '*'
-      expo-sqlite: '>=14.0.0'
       knex: '*'
       kysely: '*'
       mysql2: '>=2'
@@ -2238,15 +2234,9 @@ packages:
         optional: true
       '@cloudflare/workers-types':
         optional: true
-      '@electric-sql/pglite':
-        optional: true
       '@libsql/client':
         optional: true
-      '@libsql/client-wasm':
-        optional: true
       '@neondatabase/serverless':
-        optional: true
-      '@op-engineering/op-sqlite':
         optional: true
       '@opentelemetry/api':
         optional: true
@@ -2269,8 +2259,6 @@ packages:
       better-sqlite3:
         optional: true
       bun-types:
-        optional: true
-      expo-sqlite:
         optional: true
       knex:
         optional: true
@@ -5497,17 +5485,15 @@ snapshots:
 
   dotenv@17.3.1: {}
 
-  drizzle-kit@0.30.6:
+  drizzle-kit@0.27.2:
     dependencies:
       '@drizzle-team/brocli': 0.10.2
-      '@esbuild-kit/esm-loader': 2.6.5
       esbuild: 0.19.12
       esbuild-register: 3.6.0(esbuild@0.19.12)
-      gel: 2.2.0
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.39.3(@types/pg@8.20.0)(pg@8.20.0):
+  drizzle-orm@0.36.4(@types/pg@8.20.0)(pg@8.20.0):
     optionalDependencies:
       '@types/pg': 8.20.0
       pg: 8.20.0
