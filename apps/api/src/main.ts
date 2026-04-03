@@ -24,7 +24,9 @@ async function bootstrap() {
   console.log('[boot] db set=' + !!process.env.DATABASE_URL);
 
   console.log('[boot] creating app...');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    abortOnError: false,
+  });
   console.log('[boot] app created');
 
   const uploadsDir = join(process.cwd(), 'uploads');
