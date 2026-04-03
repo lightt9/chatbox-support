@@ -14,9 +14,14 @@ export const DB_POOL = 'DB_POOL';
       provide: DB_POOL,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
+        const connectionString = configService.get<string>('DATABASE_URL');
+        const isProduction = configService.get<string>('NODE_ENV') === 'production';
+        const useSSL = connectionString?.includes('supabase.co') || isProduction;
+
         return new Pool({
-          connectionString: configService.get<string>('DATABASE_URL'),
+          connectionString,
           max: configService.get<number>('DB_POOL_MAX', 20),
+          ...(useSSL ? { ssl: { rejectUnauthorized: false } } : {}),
         });
       },
     },

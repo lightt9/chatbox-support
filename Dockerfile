@@ -30,8 +30,6 @@ COPY --from=base /app/ /app/
 RUN mkdir -p /app/apps/api/uploads
 
 ENV NODE_ENV=production
-ENV API_PORT=3001
-EXPOSE 3001
 
 WORKDIR /app/apps/api
 CMD ["node", "dist/main"]

@@ -48,4 +48,7 @@ async function bootstrap() {
   logger.log(`WebSocket gateway available on port ${port}/chat`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Failed to start application:', err);
+  process.exit(1);
+});
