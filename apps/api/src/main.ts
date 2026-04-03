@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import * as compression from 'compression';
@@ -9,15 +8,23 @@ import * as fs from 'fs';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
+// Catch silent crashes
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] uncaughtException:', err);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] unhandledRejection:', reason);
+  process.exit(1);
+});
+
 async function bootstrap() {
-  const logger = new Logger('Bootstrap');
   const port = process.env.PORT || process.env.API_PORT || 3001;
-
   console.log('[boot] port=' + port + ' node_env=' + process.env.NODE_ENV);
+  console.log('[boot] db set=' + !!process.env.DATABASE_URL);
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: ['error', 'warn', 'log'],
-  });
+  console.log('[boot] creating app...');
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   console.log('[boot] app created');
 
   const uploadsDir = join(process.cwd(), 'uploads');
