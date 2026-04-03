@@ -1,6 +1,0 @@
-{
-  "buildCommand": "pnpm --filter @chatbox/admin build",
-  "outputDirectory": "apps/admin/.next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs"
-}
