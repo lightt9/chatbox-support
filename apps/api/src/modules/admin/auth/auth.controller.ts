@@ -62,6 +62,13 @@ export class AuthController {
     return this.authService.refresh(dto.refreshToken);
   }
 
+  @Post('switch-company')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async switchCompany(@Request() req: any, @Body() body: { companyId: string }) {
+    return this.authService.switchCompany(req.user.id, body.companyId);
+  }
+
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)

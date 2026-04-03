@@ -170,7 +170,7 @@ export default function QualityPage() {
   const [newSeverity, setNewSeverity] = useState('medium');
   const [newNotes, setNewNotes] = useState('');
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   /* ── Fetch ────────────────────────────────────────────────────────────────── */
   const fetchTickets = useCallback(async (searchVal?: string) => {

@@ -83,7 +83,7 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [editNotes, setEditNotes] = useState(false);
   const [notesVal, setNotesVal] = useState('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   /* ── Fetch ──────────────────────────────────────────────────────────────── */
   const fetchLeads = useCallback(async (s?: string) => {

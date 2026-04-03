@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import helmet from 'helmet';
 import compression from 'compression';
 import { join } from 'path';
@@ -26,6 +27,9 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Enable WebSocket with Socket.IO
+  app.useWebSocketAdapter(new IoAdapter(app));
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -41,6 +45,7 @@ async function bootstrap() {
 
   await app.listen(port);
   logger.log(`ChatBox-Support API is running on http://localhost:${port}`);
+  logger.log(`WebSocket gateway available at ws://localhost:${port}/chat`);
 }
 
 bootstrap();

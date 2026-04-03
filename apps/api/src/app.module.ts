@@ -19,6 +19,7 @@ import { OperatorsModule } from './modules/operators/operators.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AiModule } from './modules/ai/ai.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { AuditModule } from './modules/audit/audit.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ChatModule } from './modules/chat/chat.module';
     OperatorsModule,
     DashboardModule,
     ChatModule,
+    AuditModule,
   ],
   controllers: [AppController],
 })

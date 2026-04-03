@@ -1,6 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+import { isAtLeast } from '../rbac/permissions';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -22,6 +23,13 @@ export class RolesGuard implements CanActivate {
       return false;
     }
 
-    return requiredRoles.includes(user.role);
+    // Check if user's role is in the required list OR is higher in hierarchy
+    // This ensures server_admin/super_admin always passes
+    if (requiredRoles.includes(user.role)) {
+      return true;
+    }
+
+    // Check hierarchy: if user role is >= any required role, allow
+    return requiredRoles.some((required) => isAtLeast(user.role, required));
   }
 }

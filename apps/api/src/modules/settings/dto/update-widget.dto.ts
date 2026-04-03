@@ -82,4 +82,29 @@ export class UpdateWidgetDto {
   /* ── Advanced ──────────────────────────────────────────────────────────── */
   @IsOptional() @IsString() @MaxLength(5000)
   customCSS?: string;
+
+  /* ── Feature Toggles ──────────────────────────────────────────────────── */
+  @IsOptional() @IsBoolean()
+  featureLiveTyping?: boolean;
+
+  @IsOptional() @IsBoolean()
+  featureSeenStatus?: boolean;
+
+  @IsOptional() @IsBoolean()
+  featureFileUpload?: boolean;
+
+  @IsOptional() @IsBoolean()
+  featureEmoji?: boolean;
+
+  @IsOptional() @IsBoolean()
+  featureSound?: boolean;
+
+  @IsOptional() @IsBoolean()
+  featureChatHistory?: boolean;
+
+  @IsOptional() @IsBoolean()
+  featureEndChat?: boolean;
+
+  @IsOptional() @IsBoolean()
+  featureAiSuggestions?: boolean;
 }

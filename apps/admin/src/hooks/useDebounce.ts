@@ -3,7 +3,7 @@
 import { useRef, useCallback } from 'react';
 
 export function useDebounce<T extends (...args: any[]) => void>(fn: T, delay = 300) {
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   return useCallback(
     (...args: Parameters<T>) => {

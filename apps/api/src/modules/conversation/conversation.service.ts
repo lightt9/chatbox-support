@@ -64,9 +64,9 @@ export class ConversationService {
 
     const query = `
       SELECT
-        c.id, c.customer_name, c.customer_email, c.channel, c.subject,
+        c.id, c.customer_name, c.customer_email, c.customer_phone, c.channel, c.subject,
         c.status, c.assigned_agent, c.resolved_by, c.priority,
-        c.tags, c.starred, c.internal_notes,
+        c.tags, c.starred, c.internal_notes, c.metadata,
         c.first_response_at, c.resolved_at, c.created_at, c.updated_at,
         (SELECT COUNT(*)::int FROM messages m WHERE m.conversation_id = c.id) AS message_count,
         (SELECT m.body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS last_message,
@@ -101,9 +101,9 @@ export class ConversationService {
   async findOne(companyId: string, id: string) {
     const { rows } = await this.pool.query(
       `SELECT
-        c.id, c.customer_name, c.customer_email, c.channel, c.subject,
+        c.id, c.customer_name, c.customer_email, c.customer_phone, c.channel, c.subject,
         c.status, c.assigned_agent, c.resolved_by, c.priority,
-        c.tags, c.starred, c.internal_notes,
+        c.tags, c.starred, c.internal_notes, c.metadata,
         c.first_response_at, c.resolved_at, c.created_at, c.updated_at,
         (SELECT COUNT(*)::int FROM messages m WHERE m.conversation_id = c.id) AS message_count
       FROM conversations c
@@ -259,6 +259,22 @@ export class ConversationService {
     return rowCount > 0;
   }
 
+  async snooze(companyId: string, conversationId: string, until: string) {
+    const { rowCount } = await this.pool.query(
+      `UPDATE conversations SET snoozed_until = $3, updated_at = NOW() WHERE id = $1 AND company_id = $2`,
+      [conversationId, companyId, until],
+    );
+    return rowCount > 0;
+  }
+
+  async unsnooze(companyId: string, conversationId: string) {
+    const { rowCount } = await this.pool.query(
+      `UPDATE conversations SET snoozed_until = NULL, updated_at = NOW() WHERE id = $1 AND company_id = $2`,
+      [conversationId, companyId],
+    );
+    return rowCount > 0;
+  }
+
   async getStatusCounts(companyId: string, agentName?: string) {
     const { rows } = await this.pool.query(
       `SELECT
@@ -281,6 +297,7 @@ export class ConversationService {
       id: r.id,
       customerName: r.customer_name,
       customerEmail: r.customer_email,
+      customerPhone: r.customer_phone ?? null,
       channel: r.channel,
       subject: r.subject,
       status: r.status,
@@ -290,6 +307,7 @@ export class ConversationService {
       tags: r.tags ?? [],
       starred: r.starred ?? false,
       internalNotes: r.internal_notes ?? '',
+      metadata: r.metadata ?? {},
       firstResponseAt: r.first_response_at,
       resolvedAt: r.resolved_at,
       createdAt: r.created_at,

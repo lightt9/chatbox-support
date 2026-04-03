@@ -20,6 +20,15 @@ export interface WidgetConfig {
   notificationBadge: boolean;
   pulseAnimation: boolean;
   customCSS: string;
+  // Feature toggles
+  featureLiveTyping: boolean;
+  featureSeenStatus: boolean;
+  featureFileUpload: boolean;
+  featureEmoji: boolean;
+  featureSound: boolean;
+  featureChatHistory: boolean;
+  featureEndChat: boolean;
+  featureAiSuggestions: boolean;
 }
 
 const SIZES: Record<string, { w: number; h: number; bubble: number }> = {

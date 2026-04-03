@@ -16,6 +16,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AiService, ChatMessage } from '../ai/ai.service';
 import { DB_POOL } from '../../config/database.module';
 import { Inject } from '@nestjs/common';
+import { ChatGateway } from '../chat/chat.gateway';
 
 @Controller('api/v1/conversations')
 @UseGuards(AuthGuard('jwt'))
@@ -23,6 +24,7 @@ export class ConversationController {
   constructor(
     private readonly conversationService: ConversationService,
     private readonly aiService: AiService,
+    private readonly chatGateway: ChatGateway,
     @Inject(DB_POOL) private readonly pool: any,
   ) {}
 
@@ -87,6 +89,10 @@ export class ConversationController {
       companyId, id, 'agent', agentName, body.message,
     );
     if (!msg) throw new NotFoundException('Conversation not found');
+
+    // Emit real-time message to widget and dashboard
+    this.chatGateway.emitNewMessage(companyId, id, msg);
+
     return msg;
   }
 
@@ -100,6 +106,16 @@ export class ConversationController {
     const agent = body.agentName === undefined ? agentName : body.agentName;
     const ok = await this.conversationService.assign(companyId, id, agent);
     if (!ok) throw new NotFoundException('Conversation not found');
+
+    // Notify widget that an agent joined
+    if (agent) {
+      this.chatGateway.emitAgentJoined(id, agent);
+      this.chatGateway.emitConversationUpdate(companyId, id, {
+        event: 'assigned',
+        assignedAgent: agent,
+      });
+    }
+
     return { success: true, assignedAgent: agent };
   }
 
@@ -151,6 +167,27 @@ export class ConversationController {
     @Body() body: { priority: string },
   ) {
     const ok = await this.conversationService.setPriority(companyId, id, body.priority);
+    if (!ok) throw new NotFoundException('Conversation not found');
+    return { success: true };
+  }
+
+  @Patch(':id/snooze')
+  async snooze(
+    @CurrentUser('companyId') companyId: string,
+    @Param('id') id: string,
+    @Body() body: { until: string },
+  ) {
+    const ok = await this.conversationService.snooze(companyId, id, body.until);
+    if (!ok) throw new NotFoundException('Conversation not found');
+    return { success: true };
+  }
+
+  @Patch(':id/unsnooze')
+  async unsnooze(
+    @CurrentUser('companyId') companyId: string,
+    @Param('id') id: string,
+  ) {
+    const ok = await this.conversationService.unsnooze(companyId, id);
     if (!ok) throw new NotFoundException('Conversation not found');
     return { success: true };
   }

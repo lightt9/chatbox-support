@@ -11,6 +11,7 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { SettingsService } from './settings.service';
+import { ChatGateway } from '../chat/chat.gateway';
 import { UpdateGeneralDto } from './dto/update-general.dto';
 import { UpdateNotificationsDto } from './dto/update-notifications.dto';
 import { UpdateSecurityDto } from './dto/update-security.dto';
@@ -21,7 +22,10 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 @Controller('api/v1/settings')
 @UseGuards(JwtAuthGuard)
 export class SettingsController {
-  constructor(private readonly settingsService: SettingsService) {}
+  constructor(
+    private readonly settingsService: SettingsService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @Get()
   async getAll(@CurrentUser() user: any) {
@@ -65,7 +69,23 @@ export class SettingsController {
     @CurrentUser() user: any,
     @Body() dto: UpdateWidgetDto,
   ) {
-    return this.settingsService.updateWidget(user.companyId, dto);
+    const result = this.settingsService.updateWidget(user.companyId, dto);
+    // Notify all connected widgets to refetch config
+    this.chatGateway.server.emit('widget:config-updated', { companyId: user.companyId });
+    return result;
+  }
+
+  @Patch('ai')
+  async updateAi(
+    @CurrentUser() user: any,
+    @Body() body: { tone?: string; customPrompt?: string; knowledgeContext?: string },
+  ) {
+    return this.settingsService.updateAiSettings(user.companyId, body);
+  }
+
+  @Get('ai')
+  async getAi(@CurrentUser() user: any) {
+    return this.settingsService.getAiSettings(user.companyId);
   }
 
   @Post('change-password')

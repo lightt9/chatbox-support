@@ -38,6 +38,15 @@ const DEFAULT_WIDGET = {
   preChatPhoneEnabled: false,
   preChatCustomFields: [],
   customCSS: '',
+  // Feature toggles
+  featureLiveTyping: true,
+  featureSeenStatus: true,
+  featureFileUpload: true,
+  featureEmoji: true,
+  featureSound: true,
+  featureChatHistory: true,
+  featureEndChat: true,
+  featureAiSuggestions: true,
 };
 
 const BCRYPT_ROUNDS = 12;
@@ -45,6 +54,22 @@ const BCRYPT_ROUNDS = 12;
 @Injectable()
 export class SettingsService {
   constructor(@Inject(DATABASE) private readonly db: any) {}
+
+  /** Public: returns widget config for a company (no auth needed) */
+  async getPublicWidgetConfig(companyId: string) {
+    const [company] = await this.db
+      .select()
+      .from(companies)
+      .where(eq(companies.id, companyId))
+      .limit(1);
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const settings = (company.settings ?? {}) as Record<string, any>;
+    return { ...DEFAULT_WIDGET, ...settings.widget };
+  }
 
   async getAll(companyId: string, userId: string) {
     const [company] = await this.db
@@ -281,6 +306,27 @@ export class SettingsService {
       .returning();
 
     return { ...DEFAULT_WIDGET, ...(updated.settings as any).widget };
+  }
+
+  async getAiSettings(companyId: string) {
+    const [company] = await this.db.select().from(companies).where(eq(companies.id, companyId)).limit(1);
+    if (!company) return { tone: 'friendly', customPrompt: '', knowledgeContext: '' };
+    const settings = (company.settings ?? {}) as Record<string, any>;
+    return {
+      tone: settings.ai?.tone ?? 'friendly',
+      customPrompt: settings.ai?.customPrompt ?? '',
+      knowledgeContext: settings.ai?.knowledgeContext ?? '',
+    };
+  }
+
+  async updateAiSettings(companyId: string, dto: { tone?: string; customPrompt?: string; knowledgeContext?: string }) {
+    const [company] = await this.db.select().from(companies).where(eq(companies.id, companyId)).limit(1);
+    if (!company) throw new NotFoundException('Company not found');
+    const existing = (company.settings ?? {}) as Record<string, any>;
+    const updatedAi = { ...(existing.ai ?? {}), ...dto };
+    const updatedSettings = { ...existing, ai: updatedAi };
+    await this.db.update(companies).set({ settings: updatedSettings, updated_at: new Date() }).where(eq(companies.id, companyId));
+    return updatedAi;
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {

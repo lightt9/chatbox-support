@@ -10,14 +10,28 @@ import {
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { io, Socket } from 'socket.io-client';
+
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
+interface VisitorMeta {
+  ip?: string;
+  country?: string;
+  city?: string;
+  device?: string;
+  browser?: string;
+  os?: string;
+}
+
 interface Conversation {
   id: string; customerName: string; customerEmail: string | null;
+  customerPhone: string | null;
   channel: string; subject: string | null; status: string;
   assignedAgent: string | null; resolvedBy: string | null;
   priority: string; tags: string[]; starred: boolean; internalNotes: string;
+  metadata: VisitorMeta;
   createdAt: string; updatedAt: string; messageCount: number;
   lastMessage: string | null; lastMessageAt: string | null; lastSenderType: string | null;
 }
@@ -88,6 +102,7 @@ export default function ConversationsPage() {
   const [sugLoading, setSugLoading] = useState(false);
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
+  const [customerTyping, setCustomerTyping] = useState<{ name: string; draft: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [assignedFilter, setAssignedFilter] = useState<string>('');
 
@@ -147,6 +162,12 @@ export default function ConversationsPage() {
     finally { setSugLoading(false); }
   }, []);
 
+  const socketRef = useRef<Socket | null>(null);
+  const selectedIdRef = useRef<string | null>(null);
+  selectedIdRef.current = selectedId;
+  const fetchConversationsRef = useRef(fetchConversations);
+  fetchConversationsRef.current = fetchConversations;
+
   // ── Polling + SLA ─────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -156,11 +177,78 @@ export default function ConversationsPage() {
     pollRef.current = setInterval(() => {
       fetchConversations();
       if (selectedId) fetchMessages(selectedId);
-    }, 3000);
+    }, 5000); // Reduced frequency since we have WebSocket now
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [fetchConversations, fetchMessages, fetchOperators, fetchTemplates, selectedId]);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  // ── WebSocket for real-time updates ──────────────────────────────────
+
+  useEffect(() => {
+    const socket = io(`${WS_URL}/chat`, {
+      transports: ['websocket', 'polling'],
+      autoConnect: true,
+    });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      // Join the dashboard room for this company
+      if (user?.companyId) {
+        socket.emit('join:dashboard', { companyId: user.companyId });
+      }
+    });
+
+    // When a new message arrives, update the messages list and conversation list
+    socket.on('message:new', (msg: Message) => {
+      if (msg.conversationId === selectedIdRef.current) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+        // Clear typing preview when customer's actual message arrives
+        if (msg.senderType === 'customer') {
+          setCustomerTyping(null);
+        }
+      }
+      fetchConversationsRef.current();
+    });
+
+    // When a conversation is created or updated
+    socket.on('conversation:update', () => {
+      fetchConversations();
+    });
+
+    // Customer live typing preview
+    socket.on('typing:preview', (data: { conversationId: string; senderType: string; senderName?: string; draft: string }) => {
+      if (data.senderType !== 'customer') return;
+      // Show if viewing this conversation OR if it's any conversation in our dashboard
+      const isSelected = data.conversationId === selectedIdRef.current ||
+        data.conversationId === 'pending'; // Pre-conversation typing
+      if (isSelected) {
+        if (data.draft) {
+          setCustomerTyping({ name: data.senderName ?? 'Customer', draft: data.draft });
+        } else {
+          setCustomerTyping(null);
+        }
+      }
+    });
+
+    socket.on('stop:typing', (data: { conversationId: string; senderType: string }) => {
+      if (data.senderType !== 'customer') return;
+      const isSelected = data.conversationId === selectedIdRef.current ||
+        data.conversationId === 'pending';
+      if (isSelected) {
+        setCustomerTyping(null);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.companyId]);
+
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, customerTyping]);
 
   useEffect(() => {
     if (slaRef.current) clearInterval(slaRef.current);
@@ -173,23 +261,48 @@ export default function ConversationsPage() {
     return () => { if (slaRef.current) clearInterval(slaRef.current); };
   }, [selectedId, conversations]);
 
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastJoinedConvRef = useRef<string | null>(null);
+
   // ── Actions ───────────────────────────────────────────────────────────
 
   const selectConv = (id: string) => {
-    setSelectedId(id); setDraft(''); setShowAssignDD(false); setShowTemplates(false); setEditingNotes(false); setSuggestions([]);
+    // Leave previous conversation room
+    if (lastJoinedConvRef.current && socketRef.current) {
+      socketRef.current.emit('leave:conversation', { conversationId: lastJoinedConvRef.current });
+    }
+    setSelectedId(id); setDraft(''); setShowAssignDD(false); setShowTemplates(false); setEditingNotes(false); setSuggestions([]); setCustomerTyping(null);
     fetchMessages(id, true); fetchSuggestions(id);
     const c = conversations.find((x) => x.id === id);
     if (c) setNoteDraft(c.internalNotes ?? '');
     setTimeout(() => inputRef.current?.focus(), 100);
+
+    // Join conversation room + emit seen
+    if (socketRef.current) {
+      socketRef.current.emit('join:conversation', { conversationId: id });
+      socketRef.current.emit('message:seen', {
+        conversationId: id,
+        seenBy: user?.name ?? 'Agent',
+        seenByType: 'agent',
+      });
+      lastJoinedConvRef.current = id;
+    }
   };
 
   const handleSend = async (text?: string) => {
     const msg = (text ?? draft).trim();
     if (!msg || !selectedId || sending) return;
     setDraft(''); setShowTemplates(false); setSending(true);
+    // Stop typing indicator
+    if (socketRef.current) {
+      socketRef.current.emit('stop:typing', { conversationId: selectedId, senderType: 'agent', senderName: user?.name });
+    }
     try {
       const newMsg = await api.post<Message>(`/conversations/${selectedId}/messages`, { message: msg });
-      setMessages((prev) => [...prev, newMsg]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === newMsg.id)) return prev;
+        return [...prev, newMsg];
+      });
       fetchConversations(); fetchSuggestions(selectedId);
     } catch { setDraft(msg); }
     finally { setSending(false); inputRef.current?.focus(); }
@@ -232,160 +345,91 @@ export default function ConversationsPage() {
 
   // ── RENDER ────────────────────────────────────────────────────────────
 
+
   return (
-    <div className="flex h-[calc(100vh-7rem)] overflow-hidden rounded-xl border bg-card shadow-sm">
+    <div className="flex h-[calc(100vh-5rem)] overflow-hidden rounded-xl bg-card shadow-sm ring-1 ring-border/50">
 
-      {/* ═══════════ LEFT PANEL ═══════════ */}
-      <div className={cn('flex w-full flex-col border-r md:w-[360px] lg:w-[400px] md:shrink-0', selectedId && 'hidden md:flex')}>
+      {/* ═══ LEFT: Conversation List ═══ */}
+      <div className={cn('flex w-full flex-col border-r border-border/50 md:w-[320px] md:shrink-0', selectedId && 'hidden md:flex')}>
 
-        {/* Header */}
-        <div className="p-5 pb-4 space-y-4 border-b">
+        {/* Header + Search */}
+        <div className="px-4 pt-4 pb-3 space-y-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold tracking-tight">Inbox</h1>
-            <div className="flex items-center gap-2">
-              {counts.starred > 0 && (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{counts.starred}
-                </span>
-              )}
-              <span className="rounded-full bg-green-100 dark:bg-green-900/40 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-300">
-                {counts.open + counts.escalated} active
-              </span>
-            </div>
+            <h1 className="text-[15px] font-bold">Chats</h1>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+              {counts.open + counts.escalated}
+            </span>
           </div>
-
-          {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search conversations..."
-              value={search}
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
+            <input type="text" placeholder="Search..." value={search}
               onChange={(e) => { setSearch(e.target.value); if (searchTimer.current) clearTimeout(searchTimer.current); searchTimer.current = setTimeout(() => fetchConversations(true), 300); }}
-              className="flex h-9 w-full rounded-lg border border-input bg-background pl-10 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
+              className="h-8 w-full rounded-lg border border-border/50 bg-background pl-8 pr-3 text-[12px] placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30" />
           </div>
+        </div>
 
-          {/* Filters */}
-          <div className="flex gap-1.5 flex-wrap">
-            {statusTabs.map((t) => (
-              <button key={t.key} onClick={() => { setStatusFilter(t.key); fetchConversations(true); }}
-                className={cn('rounded-full px-3 py-1.5 text-xs font-medium transition-colors', statusFilter === t.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground')}>
-                {t.label}
-                {t.count > 0 && <span className="ml-1 opacity-70">{t.count}</span>}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1.5 flex-wrap">
-            {assignTabs.map((t) => (
-              <button key={t.key} onClick={() => { setAssignedFilter(t.key); fetchConversations(true); }}
-                className={cn('rounded-full px-3 py-1.5 text-xs font-medium transition-colors', assignedFilter === t.key ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted')}>
-                {t.label}
-                {t.count > 0 && <span className="ml-1 opacity-70">{t.count}</span>}
-              </button>
-            ))}
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-px px-4 pb-2">
+          {statusTabs.map((t) => (
+            <button key={t.key} onClick={() => { setStatusFilter(t.key); fetchConversations(true); }}
+              className={cn('flex-1 rounded-md py-1.5 text-[11px] font-medium transition-colors',
+                statusFilter === t.key ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground')}>
+              {t.label}{t.count > 0 && <span className="ml-1 opacity-60">{t.count}</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* Assign filter */}
+        <div className="flex gap-1 px-4 pb-3">
+          {assignTabs.map((t) => (
+            <button key={t.key} onClick={() => { setAssignedFilter(t.key); fetchConversations(true); }}
+              className={cn('rounded-md px-2 py-1 text-[10px] font-medium transition-colors',
+                assignedFilter === t.key ? 'bg-muted text-foreground' : 'text-muted-foreground/70 hover:text-muted-foreground')}>
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* List */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-3 space-y-2">{[1,2,3,4,5].map((i) => (
-              <div key={i} className="animate-pulse rounded-xl p-4 flex gap-3">
-                <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
-                <div className="flex-1 space-y-2"><div className="h-4 w-3/4 rounded bg-muted" /><div className="h-3 w-full rounded bg-muted" /></div>
-              </div>
-            ))}</div>
+            <div className="p-4 space-y-3">{[1,2,3,4].map((i) => <div key={i} className="flex gap-3 animate-pulse"><div className="h-9 w-9 rounded-full bg-muted shrink-0" /><div className="flex-1 space-y-2"><div className="h-3 w-2/3 rounded bg-muted" /><div className="h-2.5 w-full rounded bg-muted" /></div></div>)}</div>
           ) : conversations.length === 0 ? (
-            <div className="flex h-48 flex-col items-center justify-center gap-3">
-              <MessageSquare className="h-10 w-10 text-muted-foreground/20" />
-              <p className="text-sm text-muted-foreground">No conversations found</p>
-            </div>
+            <div className="flex h-40 flex-col items-center justify-center"><MessageSquare className="h-8 w-8 text-muted-foreground/20" /><p className="mt-2 text-[12px] text-muted-foreground">No conversations</p></div>
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="px-2">
               {conversations.map((conv) => {
                 const cfg = statusCfg[conv.status] ?? statusCfg.open;
-                const isActive = selectedId === conv.id;
-                const isUnread = conv.lastSenderType === 'customer' && !isActive;
-
+                const active = selectedId === conv.id;
+                const unread = conv.lastSenderType === 'customer' && !active;
                 return (
-                  <div
-                    key={conv.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => selectConv(conv.id)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') selectConv(conv.id); }}
-                    className={cn(
-                      'group relative w-full rounded-xl p-3.5 text-left cursor-pointer transition-all duration-150',
-                      isActive
-                        ? 'bg-primary/10 ring-1 ring-primary/25'
-                        : 'hover:bg-accent',
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Avatar */}
-                      <div className="relative shrink-0">
-                        <div className={cn(
-                          'flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold',
-                          isActive ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground',
-                        )}>
-                          {initials(conv.customerName)}
-                        </div>
-                        <span className={cn('absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card', cfg.dot)} />
+                  <div key={conv.id} role="button" tabIndex={0} onClick={() => selectConv(conv.id)} onKeyDown={(e) => { if (e.key === 'Enter') selectConv(conv.id); }}
+                    className={cn('group relative flex gap-3 rounded-lg px-3 py-2.5 cursor-pointer transition-all duration-150',
+                      active ? 'bg-primary/[0.07]' : 'hover:bg-muted/50')}>
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
+                      <div className={cn('flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold',
+                        active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground')}>
+                        {initials(conv.customerName)}
                       </div>
-
-                      {/* Content */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            {isUnread && <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />}
-                            {conv.starred && <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />}
-                            <span className={cn('text-sm truncate', isUnread ? 'font-bold' : 'font-semibold')}>{conv.customerName}</span>
-                            {conv.lastSenderType === 'ai' && <Bot className="h-3.5 w-3.5 shrink-0 text-cyan-500" />}
-                          </div>
-                          <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(conv.lastMessageAt ?? conv.createdAt)}</span>
-                        </div>
-
-                        {conv.subject && (
-                          <p className="mt-0.5 text-xs text-foreground/80 truncate">{conv.subject}</p>
-                        )}
-
-                        <p className={cn('mt-1 text-xs truncate', isUnread ? 'text-foreground' : 'text-muted-foreground')}>
-                          {conv.lastMessage ?? 'No messages yet'}
-                        </p>
-
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium', cfg.color)}>
-                            {cfg.label}
-                          </span>
-                          {conv.priority === 'high' && (
-                            <span className="rounded-full bg-red-100 dark:bg-red-900/40 px-2 py-0.5 text-[11px] font-medium text-red-600 dark:text-red-300">High</span>
-                          )}
-                          {conv.assignedAgent && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <UserCheck className="h-3 w-3" />{conv.assignedAgent}
-                            </span>
-                          )}
-                          {conv.messageCount > 0 && (
-                            <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
-                              <MessageSquare className="h-3 w-3" />{conv.messageCount}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                      <span className={cn('absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card', cfg.dot)} />
                     </div>
-
-                    {/* Hover star */}
-                    <div className="absolute right-3 top-3 hidden group-hover:block">
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) => handleToggleStar(conv.id, e)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); handleToggleStar(conv.id); } }}
-                        className="rounded-md p-1.5 bg-card shadow-sm border cursor-pointer hover:bg-muted transition-colors"
-                      >
-                        <Star className={cn('h-3.5 w-3.5', conv.starred ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground')} />
-                      </span>
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {unread && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                          {conv.starred && <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" />}
+                          <span className={cn('text-[12px] truncate', unread ? 'font-bold' : 'font-medium')}>{conv.customerName}</span>
+                        </div>
+                        <span className="shrink-0 text-[10px] text-muted-foreground">{timeAgo(conv.lastMessageAt ?? conv.createdAt)}</span>
+                      </div>
+                      <p className={cn('mt-0.5 text-[11px] truncate', unread ? 'text-foreground' : 'text-muted-foreground')}>{conv.lastMessage ?? 'No messages'}</p>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className={cn('rounded px-1.5 py-0.5 text-[9px] font-medium', cfg.color)}>{cfg.label}</span>
+                        {conv.assignedAgent && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><UserCheck className="h-2.5 w-2.5" />{conv.assignedAgent.split(' ')[0]}</span>}
+                        {conv.lastSenderType === 'ai' && <Bot className="h-2.5 w-2.5 text-cyan-500" />}
+                      </div>
                     </div>
                   </div>
                 );
@@ -395,99 +439,63 @@ export default function ConversationsPage() {
         </div>
       </div>
 
-      {/* ═══════════ CENTER: Chat ═══════════ */}
+      {/* ═══ CENTER: Chat ═══ */}
       <div className={cn('flex flex-1 flex-col', !selectedId && 'hidden md:flex')}>
         {!selectedId ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="text-center space-y-3">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-                <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
-              </div>
-              <div>
-                <p className="text-base font-medium text-foreground">Select a conversation</p>
-                <p className="text-sm text-muted-foreground">Choose from the list to start chatting</p>
-              </div>
-            </div>
+            <div className="text-center"><MessageSquare className="mx-auto h-10 w-10 text-muted-foreground/20" /><p className="mt-2 text-sm font-medium text-muted-foreground">Select a conversation</p></div>
           </div>
         ) : (
           <>
-            {/* Chat header */}
-            <div className="flex items-center justify-between border-b px-5 py-3">
+            {/* Chat header bar */}
+            <div className="flex items-center justify-between border-b border-border/50 px-4 py-2.5">
               <div className="flex items-center gap-3 min-w-0">
-                <button onClick={() => setSelectedId(null)} className="md:hidden rounded-lg p-1.5 hover:bg-muted"><ArrowLeft className="h-5 w-5" /></button>
-                <div className="relative shrink-0">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                    {initials(selected?.customerName ?? '')}
-                  </div>
-                  <span className={cn('absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card', statusCfg[selected?.status ?? 'open'].dot)} />
-                </div>
+                <button onClick={() => setSelectedId(null)} className="md:hidden rounded-lg p-1 hover:bg-muted"><ArrowLeft className="h-4 w-4" /></button>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{initials(selected?.customerName ?? '')}</div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold truncate">{selected?.customerName}</h2>
-                    <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-medium', statusCfg[selected?.status ?? 'open'].color)}>
-                      {statusCfg[selected?.status ?? 'open'].label}
-                    </span>
-                    {aiHandled && (
-                      <span className="rounded-full bg-cyan-100 dark:bg-cyan-900/40 px-2 py-0.5 text-[11px] font-medium text-cyan-700 dark:text-cyan-300 flex items-center gap-1">
-                        <Bot className="h-3 w-3" />AI
-                      </span>
-                    )}
+                    <span className="text-[13px] font-semibold truncate">{selected?.customerName}</span>
+                    <span className={cn('rounded px-1.5 py-0.5 text-[9px] font-medium', statusCfg[selected?.status ?? 'open'].color)}>{statusCfg[selected?.status ?? 'open'].label}</span>
+                    {aiHandled && <span className="rounded bg-cyan-50 dark:bg-cyan-900/30 px-1.5 py-0.5 text-[9px] font-medium text-cyan-600 dark:text-cyan-300 flex items-center gap-0.5"><Bot className="h-2.5 w-2.5" />AI</span>}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                    <span className="capitalize">{selected?.channel}</span>
-                    {selected?.customerEmail && <><span>·</span><span className="truncate">{selected.customerEmail}</span></>}
-                    {slaText && <><span>·</span><span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium"><Timer className="h-3 w-3" />Waiting {slaText}</span></>}
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                    <span className="capitalize">{selected?.channel?.replace('_', ' ')}</span>
+                    {selected?.customerEmail && <><span>&middot;</span><span className="truncate">{selected.customerEmail}</span></>}
+                    {slaText && <><span>&middot;</span><span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5"><Timer className="h-2.5 w-2.5" />{slaText}</span></>}
                   </div>
                 </div>
               </div>
-
               {/* Actions */}
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
                 {aiHandled ? (
-                  <button onClick={() => handleAssignTo(user?.name ?? null)} className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/20 transition-colors">
-                    <Hand className="h-3.5 w-3.5" /> Take over
-                  </button>
+                  <button onClick={() => handleAssignTo(user?.name ?? null)} className="rounded-lg bg-primary/10 px-2.5 py-1.5 text-[11px] font-medium text-primary transition hover:bg-primary/15"><Hand className="mr-1 inline h-3 w-3" />Take over</button>
                 ) : selected?.assignedAgent && selected.status !== 'resolved' ? (
-                  <button onClick={() => handleAssignTo(null)} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">
-                    <RotateCcw className="h-3.5 w-3.5" /> Return to AI
-                  </button>
+                  <button onClick={() => handleAssignTo(null)} className="rounded-lg px-2.5 py-1.5 text-[11px] text-muted-foreground transition hover:bg-muted"><RotateCcw className="mr-1 inline h-3 w-3" />Return to AI</button>
                 ) : null}
-
+                {/* Assign dropdown */}
                 <div className="relative">
-                  <button onClick={() => setShowAssignDD(!showAssignDD)} className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium hover:bg-muted transition-colors">
-                    <UserCheck className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline max-w-[80px] truncate">{selected?.assignedAgent ?? 'Assign'}</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
+                  <button onClick={() => setShowAssignDD(!showAssignDD)} className="rounded-lg border border-border/50 px-2 py-1.5 text-[11px] font-medium transition hover:bg-muted">
+                    <UserCheck className="mr-1 inline h-3 w-3" /><span className="hidden sm:inline">{selected?.assignedAgent?.split(' ')[0] ?? 'Assign'}</span><ChevronDown className="ml-0.5 inline h-3 w-3" />
                   </button>
                   {showAssignDD && (
-                    <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border bg-popover p-1.5 shadow-lg">
-                      <button onClick={() => handleAssignTo(null)} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs hover:bg-muted transition-colors">
-                        <UserX className="h-4 w-4 text-muted-foreground" /> Unassign
-                      </button>
-                      <div className="my-1 border-t" />
+                    <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border border-border/50 bg-popover p-1 shadow-xl">
+                      <button onClick={() => handleAssignTo(null)} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] hover:bg-muted"><UserX className="h-3.5 w-3.5 text-muted-foreground" />Unassign</button>
+                      <div className="my-1 border-t border-border/50" />
                       {operators.map((op) => (
-                        <button key={op.id} onClick={() => handleAssignTo(op.name)}
-                          className={cn('flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-xs hover:bg-muted transition-colors', selected?.assignedAgent === op.name && 'bg-primary/10 text-primary')}>
-                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-bold">{initials(op.name)}</div>
+                        <button key={op.id} onClick={() => handleAssignTo(op.name)} className={cn('flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] hover:bg-muted', selected?.assignedAgent === op.name && 'bg-primary/10 text-primary')}>
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[8px] font-bold">{initials(op.name)}</div>
                           <span className="flex-1">{op.name}</span>
-                          <span className={cn('h-2 w-2 rounded-full', op.status === 'online' ? 'bg-green-500' : 'bg-gray-300')} />
+                          <span className={cn('h-1.5 w-1.5 rounded-full', op.status === 'online' ? 'bg-green-500' : 'bg-gray-300')} />
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-
-                {selected?.status === 'open' && (
-                  <button onClick={handleEscalate} className="rounded-lg p-2 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors" title="Escalate">
-                    <AlertTriangle className="h-4 w-4" />
-                  </button>
-                )}
+                {selected?.status === 'open' && <button onClick={handleEscalate} className="rounded-lg p-1.5 text-amber-500 transition hover:bg-amber-50 dark:hover:bg-amber-900/20" title="Escalate"><AlertTriangle className="h-3.5 w-3.5" /></button>}
                 {selected?.status === 'resolved' ? (
-                  <button onClick={handleReopen} className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">Reopen</button>
+                  <button onClick={handleReopen} className="rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-amber-600 transition hover:bg-amber-50 dark:hover:bg-amber-900/20">Reopen</button>
                 ) : (
-                  <button onClick={handleResolve} className="inline-flex items-center gap-1.5 rounded-lg bg-green-100 dark:bg-green-900/30 px-3 py-2 text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Resolve
-                  </button>
+                  <button onClick={handleResolve} className="rounded-lg bg-green-50 dark:bg-green-900/20 px-2.5 py-1.5 text-[11px] font-medium text-green-700 dark:text-green-300 transition hover:bg-green-100 dark:hover:bg-green-900/30"><CheckCircle2 className="mr-1 inline h-3 w-3" />Resolve</button>
                 )}
               </div>
             </div>
@@ -496,11 +504,11 @@ export default function ConversationsPage() {
             <div className="flex flex-1 overflow-hidden">
               {/* Messages */}
               <div className="flex flex-1 flex-col">
-                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
                   {msgsLoading ? (
-                    <div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                    <div className="flex items-center justify-center py-16"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
                   ) : messages.length === 0 ? (
-                    <div className="flex items-center justify-center py-16"><p className="text-sm text-muted-foreground">No messages yet</p></div>
+                    <div className="flex items-center justify-center py-16"><p className="text-[12px] text-muted-foreground">No messages yet</p></div>
                   ) : (
                     <>
                       {messages.map((msg, idx) => {
@@ -508,75 +516,56 @@ export default function ConversationsPage() {
                         const isAi = msg.senderType === 'ai';
                         const prev = messages[idx - 1];
                         const showDate = !prev || new Date(msg.createdAt).toDateString() !== new Date(prev.createdAt).toDateString();
-                        const sameSender = prev && prev.senderType === msg.senderType;
-
+                        const grouped = prev && prev.senderType === msg.senderType && !showDate;
                         return (
                           <div key={msg.id}>
                             {showDate && (
-                              <div className="flex items-center gap-4 py-3">
-                                <div className="h-px flex-1 bg-border" />
-                                <span className="text-xs font-medium text-muted-foreground">
-                                  {new Date(msg.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                </span>
-                                <div className="h-px flex-1 bg-border" />
-                              </div>
+                              <div className="flex items-center gap-3 py-2"><div className="h-px flex-1 bg-border/50" /><span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{new Date(msg.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span><div className="h-px flex-1 bg-border/50" /></div>
                             )}
-                            <div className={cn('flex gap-2.5', isCust ? 'justify-start' : 'justify-end', !sameSender && 'mt-3')}>
-                              {isCust && (
-                                <div className={cn('mt-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold', sameSender && 'invisible')}>
-                                  {initials(msg.senderName ?? 'C')}
-                                </div>
-                              )}
-                              <div className={cn(
-                                'max-w-[70%] rounded-2xl px-4 py-2.5',
-                                isCust
-                                  ? 'bg-muted rounded-bl-lg'
-                                  : isAi
-                                    ? 'bg-cyan-50 text-cyan-900 dark:bg-cyan-950/40 dark:text-cyan-200 rounded-br-lg'
-                                    : 'bg-primary text-primary-foreground rounded-br-lg',
-                              )}>
-                                {!isCust && !sameSender && (
-                                  <p className="mb-1 text-[11px] font-semibold opacity-70 flex items-center gap-1">
-                                    {isAi && <Bot className="h-3 w-3" />}
-                                    {isAi ? 'AI Assistant' : msg.senderName}
-                                  </p>
-                                )}
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.body}</p>
-                                <p className={cn('mt-1 text-[10px] opacity-50', isCust ? 'text-left' : 'text-right')}>{formatTime(msg.createdAt)}</p>
+                            <div className={cn('flex gap-2', isCust ? 'justify-start' : 'justify-end', !grouped && 'mt-3')}>
+                              {isCust && <div className={cn('mt-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold', grouped && 'invisible')}>{initials(msg.senderName ?? 'C')}</div>}
+                              <div className={cn('max-w-[70%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed',
+                                isCust ? 'bg-muted rounded-bl-md' : isAi ? 'bg-cyan-50/80 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100 rounded-br-md' : 'bg-primary text-primary-foreground rounded-br-md')}>
+                                {!isCust && !grouped && <p className="mb-0.5 text-[9px] font-semibold opacity-60 flex items-center gap-1">{isAi && <Bot className="h-2.5 w-2.5" />}{isAi ? 'AI' : msg.senderName}</p>}
+                                <p className="whitespace-pre-wrap">{msg.body}</p>
+                                <p className={cn('mt-1 text-[9px] opacity-40', isCust ? 'text-left' : 'text-right')}>{formatTime(msg.createdAt)}</p>
                               </div>
-                              {!isCust && (
-                                <div className={cn(
-                                  'mt-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                                  isAi ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' : 'bg-primary/20 text-primary',
-                                  sameSender && 'invisible',
-                                )}>
-                                  {isAi ? <Bot className="h-3.5 w-3.5" /> : initials(msg.senderName ?? 'A')}
-                                </div>
-                              )}
+                              {!isCust && <div className={cn('mt-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold', isAi ? 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300' : 'bg-primary/15 text-primary', grouped && 'invisible')}>{isAi ? <Bot className="h-3 w-3" /> : initials(msg.senderName ?? 'A')}</div>}
                             </div>
                           </div>
                         );
                       })}
+
+                      {/* Customer typing preview */}
+                      {customerTyping && (
+                        <div className="flex gap-2 justify-start mt-3">
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold">{customerTyping.name[0]?.toUpperCase()}</div>
+                          <div className="rounded-2xl rounded-bl-md bg-muted/60 px-3 py-2">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <div className="flex gap-[2px]"><span className="h-1 w-1 animate-bounce rounded-full bg-primary/50" style={{animationDelay:'0ms'}} /><span className="h-1 w-1 animate-bounce rounded-full bg-primary/50" style={{animationDelay:'150ms'}} /><span className="h-1 w-1 animate-bounce rounded-full bg-primary/50" style={{animationDelay:'300ms'}} /></div>
+                              <span className="text-[10px] font-medium text-primary/70">{customerTyping.name} is typing</span>
+                            </div>
+                            {customerTyping.draft && <p className="text-[12px] italic text-muted-foreground/40 select-none" style={{filter:'blur(0.3px)'}}>{customerTyping.draft}</p>}
+                          </div>
+                        </div>
+                      )}
+
                       <div ref={messagesEndRef} />
                     </>
                   )}
                 </div>
 
-                {/* AI Suggestions */}
+                {/* AI Suggestions - click to INSERT into input, not auto-send */}
                 {selected?.status !== 'resolved' && suggestions.length > 0 && (
-                  <div className="border-t bg-muted/30 px-5 py-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="h-3.5 w-3.5 text-purple-500" />
-                      <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">AI Suggestions</span>
-                      <button onClick={() => selectedId && fetchSuggestions(selectedId)} className="ml-auto text-xs text-muted-foreground hover:text-foreground">
-                        {sugLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
-                      </button>
+                  <div className="border-t border-border/30 bg-muted/20 px-4 py-2">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Sparkles className="h-3 w-3 text-purple-500" />
+                      <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400">Suggestions</span>
+                      <button onClick={() => selectedId && fetchSuggestions(selectedId)} className="ml-auto text-muted-foreground hover:text-foreground">{sugLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}</button>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-1.5 flex-wrap">
                       {suggestions.map((s, i) => (
-                        <button key={i} onClick={() => handleSend(s)} className="rounded-lg border border-purple-200 dark:border-purple-800 bg-card px-3.5 py-2 text-xs text-foreground hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors max-w-[260px] text-left truncate">
-                          {s}
-                        </button>
+                        <button key={i} onClick={() => setDraft(s)} className="rounded-lg border border-purple-200/50 dark:border-purple-800/50 bg-card px-2.5 py-1.5 text-[11px] text-foreground hover:bg-purple-50 dark:hover:bg-purple-900/20 transition max-w-[240px] text-left truncate">{s}</button>
                       ))}
                     </div>
                   </div>
@@ -584,52 +573,45 @@ export default function ConversationsPage() {
 
                 {/* Templates */}
                 {showTemplates && selected?.status !== 'resolved' && (
-                  <div className="border-t bg-card px-5 py-3 max-h-52 overflow-y-auto">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">Saved Replies</p>
+                  <div className="border-t border-border/30 bg-card px-4 py-2.5 max-h-40 overflow-y-auto">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Saved Replies</p>
                     {Object.entries(templatesByCategory).map(([cat, tpls]) => (
-                      <div key={cat} className="mb-3">
-                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground/60 mb-1">{cat}</p>
-                        <div className="space-y-1">
-                          {tpls.map((t) => (
-                            <button key={t.id} onClick={() => { setDraft(t.content); setShowTemplates(false); inputRef.current?.focus(); }}
-                              className="w-full rounded-lg px-3 py-2 text-left hover:bg-muted transition-colors">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-medium">{t.title}</span>
-                                {t.shortcut && <code className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{t.shortcut}</code>}
-                              </div>
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">{t.content}</p>
-                            </button>
-                          ))}
-                        </div>
+                      <div key={cat} className="mb-2">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 mb-1">{cat}</p>
+                        {tpls.map((t) => (
+                          <button key={t.id} onClick={() => { setDraft(t.content); setShowTemplates(false); inputRef.current?.focus(); }} className="w-full rounded-lg px-2.5 py-1.5 text-left hover:bg-muted transition">
+                            <span className="text-[11px] font-medium">{t.title}</span>
+                            {t.shortcut && <code className="ml-1.5 text-[9px] text-muted-foreground bg-muted px-1 py-0.5 rounded">{t.shortcut}</code>}
+                          </button>
+                        ))}
                       </div>
                     ))}
-                    {templates.length === 0 && <p className="text-xs text-muted-foreground">No saved replies yet</p>}
+                    {templates.length === 0 && <p className="text-[11px] text-muted-foreground">No saved replies</p>}
                   </div>
                 )}
 
                 {/* Input */}
                 {selected?.status !== 'resolved' && (
-                  <div className="border-t px-4 py-3">
+                  <div className="border-t border-border/50 px-4 py-2.5">
                     <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-2">
                       <button type="button" onClick={() => setShowTemplates(!showTemplates)}
-                        className={cn('rounded-lg p-2.5 transition-colors', showTemplates ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')} title="Saved Replies">
+                        className={cn('rounded-lg p-2 transition', showTemplates ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')} title="Templates">
                         <FileText className="h-4 w-4" />
                       </button>
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        placeholder="Type a message or / for templates..."
-                        value={draft}
+                      <input ref={inputRef} type="text" placeholder="Type a message..." value={draft}
                         onChange={(e) => {
                           setDraft(e.target.value);
                           if (e.target.value.startsWith('/') && !showTemplates) setShowTemplates(true);
                           if (!e.target.value.startsWith('/') && showTemplates && e.target.value.length <= 1) setShowTemplates(false);
+                          if (socketRef.current && selectedId && e.target.value.trim()) {
+                            socketRef.current.emit('typing', { conversationId: selectedId, senderType: 'agent', senderName: user?.name });
+                            if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+                            typingTimerRef.current = setTimeout(() => { if (socketRef.current && selectedIdRef.current) socketRef.current.emit('stop:typing', { conversationId: selectedIdRef.current, senderType: 'agent', senderName: user?.name }); }, 2000);
+                          }
                         }}
                         disabled={sending}
-                        className="flex h-10 flex-1 rounded-lg border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                      />
-                      <button type="submit" disabled={!draft.trim() || sending}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40">
+                        className="flex h-9 flex-1 rounded-lg border border-border/50 bg-background px-3 text-[13px] placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 disabled:opacity-50" />
+                      <button type="submit" disabled={!draft.trim() || sending} className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:opacity-30">
                         {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                       </button>
                     </form>
@@ -637,42 +619,31 @@ export default function ConversationsPage() {
                 )}
               </div>
 
-              {/* ═══════════ RIGHT: Sidebar ═══════════ */}
+              {/* ═══ RIGHT: Customer Details ═══ */}
               {selected && (
-                <div className="hidden w-72 shrink-0 border-l lg:flex lg:flex-col overflow-y-auto">
+                <div className="hidden w-[280px] shrink-0 border-l border-border/50 lg:flex lg:flex-col overflow-y-auto">
 
                   {/* Customer info */}
-                  <div className="p-5 border-b space-y-4">
+                  <div className="p-4 border-b border-border/50 space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                        {initials(selected.customerName)}
-                      </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-[12px] font-bold text-primary">{initials(selected.customerName)}</div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate">{selected.customerName}</p>
-                        {selected.customerEmail && <p className="text-xs text-muted-foreground truncate">{selected.customerEmail}</p>}
+                        <p className="text-[13px] font-semibold truncate">{selected.customerName}</p>
+                        {selected.customerEmail && <p className="text-[11px] text-muted-foreground truncate">{selected.customerEmail}</p>}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div><p className="text-muted-foreground/70">Channel</p><p className="font-medium capitalize">{selected.channel?.replace('_', ' ')}</p></div>
+                      <div><p className="text-muted-foreground/70">Messages</p><p className="font-medium">{selected.messageCount}</p></div>
+                      <div><p className="text-muted-foreground/70">Created</p><p className="font-medium">{new Date(selected.createdAt).toLocaleDateString()}</p></div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Channel</p>
-                        <p className="font-medium capitalize">{selected.channel}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">Messages</p>
-                        <p className="font-medium">{selected.messageCount}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">Created</p>
-                        <p className="font-medium">{new Date(selected.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-0.5">Priority</p>
-                        <div className="flex gap-1 mt-0.5">
+                        <p className="text-muted-foreground/70">Priority</p>
+                        <div className="flex gap-0.5 mt-0.5">
                           {(['low', 'normal', 'high'] as const).map((p) => (
                             <button key={p} onClick={() => handleSetPriority(p)}
-                              className={cn('rounded-md px-2 py-1 text-[11px] font-medium capitalize transition-colors',
+                              className={cn('rounded px-1.5 py-0.5 text-[9px] font-medium capitalize transition',
                                 selected.priority === p
-                                  ? p === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' : p === 'low' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-muted text-foreground'
+                                  ? p === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/40' : p === 'low' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40' : 'bg-muted text-foreground'
                                   : 'text-muted-foreground hover:bg-muted')}>
                               {p}
                             </button>
@@ -682,52 +653,54 @@ export default function ConversationsPage() {
                     </div>
                   </div>
 
+                  {/* Visitor info */}
+                  {selected.metadata && Object.keys(selected.metadata).length > 0 && (
+                    <div className="px-4 py-3 border-b border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2 flex items-center gap-1"><Globe className="h-3 w-3" />Visitor</p>
+                      <div className="space-y-1.5 text-[11px]">
+                        {selected.metadata.browser && <div className="flex justify-between"><span className="text-muted-foreground">Browser</span><span className="font-medium">{selected.metadata.browser}</span></div>}
+                        {selected.metadata.os && <div className="flex justify-between"><span className="text-muted-foreground">OS</span><span className="font-medium">{selected.metadata.os}</span></div>}
+                        {selected.metadata.device && <div className="flex justify-between"><span className="text-muted-foreground">Device</span><span className="font-medium capitalize">{selected.metadata.device}</span></div>}
+                        {selected.metadata.ip && <div className="flex justify-between"><span className="text-muted-foreground">IP</span><span className="font-medium font-mono text-[10px]">{selected.metadata.ip}</span></div>}
+                        {selected.customerPhone && <div className="flex justify-between"><span className="text-muted-foreground">Phone</span><span className="font-medium">{selected.customerPhone}</span></div>}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Analytics */}
                   {miniStats && (
-                    <div className="px-5 py-4 border-b">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-3">
-                        <BarChart3 className="h-3.5 w-3.5" /> Analytics
-                      </h4>
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div><p className="text-xl font-bold">{miniStats.total}</p><p className="text-xs text-muted-foreground">Messages</p></div>
-                        <div><p className="text-xl font-bold text-cyan-600 dark:text-cyan-400">{miniStats.aiPct}%</p><p className="text-xs text-muted-foreground">AI</p></div>
-                        <div><p className="text-xl font-bold text-primary">{miniStats.humanPct}%</p><p className="text-xs text-muted-foreground">Human</p></div>
+                    <div className="px-4 py-3 border-b border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2 flex items-center gap-1"><BarChart3 className="h-3 w-3" />Analytics</p>
+                      <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+                        <div><p className="text-lg font-bold">{miniStats.total}</p><p className="text-muted-foreground/70">Msgs</p></div>
+                        <div><p className="text-lg font-bold text-cyan-600 dark:text-cyan-400">{miniStats.aiPct}%</p><p className="text-muted-foreground/70">AI</p></div>
+                        <div><p className="text-lg font-bold text-primary">{miniStats.humanPct}%</p><p className="text-muted-foreground/70">Human</p></div>
                       </div>
-                      {miniStats.aiPct > 0 && (
-                        <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden flex">
-                          <div className="bg-cyan-500 transition-all" style={{ width: `${miniStats.aiPct}%` }} />
-                          <div className="bg-primary transition-all" style={{ width: `${miniStats.humanPct}%` }} />
-                        </div>
-                      )}
+                      {miniStats.aiPct > 0 && <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden flex"><div className="bg-cyan-500 transition-all" style={{width:`${miniStats.aiPct}%`}} /><div className="bg-primary transition-all" style={{width:`${miniStats.humanPct}%`}} /></div>}
                     </div>
                   )}
 
                   {/* Tags */}
-                  <div className="px-5 py-4 border-b">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                        <Tag className="h-3.5 w-3.5" /> Tags
-                      </h4>
-                      <button onClick={() => setShowTagInput(!showTagInput)} className="rounded-md p-1 hover:bg-muted transition-colors">
-                        <Plus className="h-3.5 w-3.5 text-muted-foreground" />
-                      </button>
+                  <div className="px-4 py-3 border-b border-border/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider flex items-center gap-1"><Tag className="h-3 w-3" />Tags</p>
+                      <button onClick={() => setShowTagInput(!showTagInput)} className="rounded p-0.5 hover:bg-muted"><Plus className="h-3 w-3 text-muted-foreground" /></button>
                     </div>
-                    <div className="flex gap-1.5 flex-wrap">
+                    <div className="flex gap-1 flex-wrap">
                       {(selected.tags ?? []).map((tag) => (
-                        <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                          {tag}
-                          <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive transition-colors"><X className="h-3 w-3" /></button>
+                        <span key={tag} className="inline-flex items-center gap-0.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium">
+                          {tag}<button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive"><X className="h-2.5 w-2.5" /></button>
                         </span>
                       ))}
-                      {(selected.tags ?? []).length === 0 && !showTagInput && <p className="text-xs text-muted-foreground">No tags yet</p>}
+                      {(selected.tags ?? []).length === 0 && !showTagInput && <p className="text-[10px] text-muted-foreground">No tags</p>}
                     </div>
                     {showTagInput && (
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-2 space-y-1.5">
                         <input value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(newTag); } }}
-                          placeholder="Add tag..." className="h-8 w-full rounded-lg border border-input bg-background px-3 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
-                        <div className="flex gap-1.5 flex-wrap">
-                          {TAG_PRESETS.filter((t) => !(selected.tags ?? []).includes(t)).map((t) => (
-                            <button key={t} onClick={() => handleAddTag(t)} className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">+{t}</button>
+                          placeholder="Add tag..." className="h-7 w-full rounded-md border border-border/50 bg-background px-2 text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+                        <div className="flex gap-1 flex-wrap">
+                          {TAG_PRESETS.filter((t) => !(selected.tags ?? []).includes(t)).slice(0, 5).map((t) => (
+                            <button key={t} onClick={() => handleAddTag(t)} className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground hover:text-foreground transition">+{t}</button>
                           ))}
                         </div>
                       </div>
@@ -735,24 +708,22 @@ export default function ConversationsPage() {
                   </div>
 
                   {/* Notes */}
-                  <div className="px-5 py-4 flex-1">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                        <StickyNote className="h-3.5 w-3.5" /> Internal Notes
-                      </h4>
-                      {!editingNotes && <button onClick={() => { setEditingNotes(true); setNoteDraft(selected.internalNotes ?? ''); }} className="text-xs text-primary hover:underline">Edit</button>}
+                  <div className="px-4 py-3 flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider flex items-center gap-1"><StickyNote className="h-3 w-3" />Notes</p>
+                      {!editingNotes && <button onClick={() => { setEditingNotes(true); setNoteDraft(selected.internalNotes ?? ''); }} className="text-[10px] text-primary hover:underline">Edit</button>}
                     </div>
                     {editingNotes ? (
-                      <div className="space-y-2">
-                        <textarea value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} rows={5}
-                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none" placeholder="Add internal notes..." />
-                        <div className="flex gap-2">
-                          <button onClick={handleSaveNotes} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors">Save</button>
-                          <button onClick={() => setEditingNotes(false)} className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
+                      <div className="space-y-1.5">
+                        <textarea value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} rows={4}
+                          className="w-full rounded-lg border border-border/50 bg-background px-2.5 py-2 text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 resize-none" placeholder="Internal notes..." />
+                        <div className="flex gap-1.5">
+                          <button onClick={handleSaveNotes} className="rounded-lg bg-primary px-3 py-1 text-[11px] font-medium text-primary-foreground transition hover:bg-primary/90">Save</button>
+                          <button onClick={() => setEditingNotes(false)} className="rounded-lg px-3 py-1 text-[11px] text-muted-foreground transition hover:bg-muted">Cancel</button>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{selected.internalNotes || 'No notes yet. Click Edit to add internal team notes.'}</p>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-wrap">{selected.internalNotes || 'No notes. Click Edit to add.'}</p>
                     )}
                   </div>
                 </div>

@@ -62,6 +62,21 @@ async function seed() {
     const sqlPath = path.resolve(__dirname, 'create-tables.sql');
     const createTablesSql = fs.readFileSync(sqlPath, 'utf-8');
     await pool.query(createTablesSql);
+
+    // Run migrations
+    for (const migrationFile of ['add-widget-columns.sql', 'add-rbac.sql']) {
+      const migrationPath = path.resolve(__dirname, migrationFile);
+      if (fs.existsSync(migrationPath)) {
+        await pool.query(fs.readFileSync(migrationPath, 'utf-8'));
+      }
+    }
+
+    // (legacy compat - keep old widget migration block)
+    const widgetMigrationPath = path.resolve(__dirname, 'add-widget-columns.sql');
+    if (false && fs.existsSync(widgetMigrationPath)) {
+      const widgetSql = fs.readFileSync(widgetMigrationPath, 'utf-8');
+      await pool.query(widgetSql);
+    }
     console.log('  Tables ready.');
 
     // ── 2. Seed default company ───────────────────────────────────────────
@@ -253,137 +268,10 @@ async function seed() {
       console.log(`  Created ${insertedOperators.length} operators with team assignments.`);
     }
 
-    // ── 8. Check existing demo data ─────────────────────────────────────
-    // The DB already has conversations, messages, and leads from prior seeding.
-    // This section only runs on a fresh database.
-    console.log('Checking demo conversations & leads...');
-
-    const existingConvs = await pool.query(
-      'SELECT COUNT(*)::int AS cnt FROM conversations WHERE company_id = $1',
-      [companyId],
-    );
-
-    if (existingConvs.rows[0].cnt > 0) {
-      console.log(`  ${existingConvs.rows[0].cnt} conversations already exist. Skipping demo data.`);
-    } else {
-      console.log('  No conversations found — seeding demo data...');
-
-      // Fetch operator names for assignment
-      const opRows = (await pool.query(
-        'SELECT id, name FROM operators WHERE company_id = $1 AND active = true ORDER BY name',
-        [companyId],
-      )).rows;
-
-      // Actual DB schema: conversations has customer_name, customer_email, assigned_agent (text),
-      // resolved_by ('ai'|'agent'), first_response_at, status ('open'|'resolved'|'escalated')
-      // Messages: sender_type ('customer'|'agent'|'ai'), sender_name, body
-
-      const convTemplates = [
-        { status: 'resolved', resolvedBy: 'ai', channel: 'web_chat', subject: 'How to reset password?', customer: 'John Doe', email: 'john@ex.com', agent: null, daysAgo: 0.5 },
-        { status: 'resolved', resolvedBy: 'ai', channel: 'web_chat', subject: 'Pricing question', customer: 'Sarah Connor', email: 'sarah@ex.com', agent: null, daysAgo: 1 },
-        { status: 'open', resolvedBy: null, channel: 'web_chat', subject: 'Feature request: dark mode', customer: 'Mike Chen', email: 'mike@ex.com', agent: null, daysAgo: 0.1 },
-        { status: 'escalated', resolvedBy: null, channel: 'web_chat', subject: 'Billing issue', customer: 'Emma Wilson', email: 'emma@ex.com', agent: opRows[0]?.name ?? null, daysAgo: 2 },
-        { status: 'open', resolvedBy: null, channel: 'web_chat', subject: 'Setup help', customer: 'Carlos Ruiz', email: 'carlos@ex.com', agent: null, daysAgo: 0.2 },
-        { status: 'resolved', resolvedBy: 'ai', channel: 'web_chat', subject: 'Integrations help', customer: 'Aisha Patel', email: 'aisha@ex.com', agent: null, daysAgo: 3 },
-        { status: 'resolved', resolvedBy: 'agent', channel: 'web_chat', subject: 'Service down', customer: 'Tom Bradley', email: 'tom@ex.com', agent: opRows[1]?.name ?? null, daysAgo: 4 },
-        { status: 'resolved', resolvedBy: 'ai', channel: 'web_chat', subject: 'Export data', customer: 'Lisa Zhang', email: 'lisa@ex.com', agent: null, daysAgo: 6 },
-        { status: 'open', resolvedBy: null, channel: 'web_chat', subject: 'Cannot upload files', customer: 'Raj Sharma', email: 'raj@ex.com', agent: null, daysAgo: 0.4 },
-        { status: 'resolved', resolvedBy: 'ai', channel: 'web_chat', subject: 'Language support', customer: 'Nina Kowalski', email: 'nina@ex.com', agent: null, daysAgo: 7 },
-        { status: 'escalated', resolvedBy: null, channel: 'web_chat', subject: 'Account deletion', customer: 'James Park', email: 'james@ex.com', agent: opRows[2]?.name ?? null, daysAgo: 0.05 },
-        { status: 'resolved', resolvedBy: 'agent', channel: 'web_chat', subject: 'Payment failed', customer: 'Maria Garcia', email: 'maria@ex.com', agent: opRows[0]?.name ?? null, daysAgo: 5 },
-        { status: 'resolved', resolvedBy: 'ai', channel: 'web_chat', subject: 'SSO setup', customer: 'John Doe', email: 'john@ex.com', agent: null, daysAgo: 12 },
-        { status: 'resolved', resolvedBy: 'ai', channel: 'web_chat', subject: 'GDPR question', customer: 'Sarah Connor', email: 'sarah@ex.com', agent: null, daysAgo: 16 },
-        { status: 'open', resolvedBy: null, channel: 'web_chat', subject: 'Slack integration', customer: 'Mike Chen', email: 'mike@ex.com', agent: null, daysAgo: 0.15 },
-      ];
-
-      const convIds: string[] = [];
-      for (const t of convTemplates) {
-        const createdAt = new Date(Date.now() - t.daysAgo * 86400000);
-        const firstResponse = new Date(createdAt.getTime() + (30 + Math.random() * 180) * 1000);
-        const resolvedAt = t.status === 'resolved'
-          ? new Date(createdAt.getTime() + (t.daysAgo < 1 ? 600000 : 3600000))
-          : null;
-
-        const { rows } = await pool.query(
-          `INSERT INTO conversations (
-            company_id, customer_name, customer_email, channel, subject,
-            status, assigned_agent, resolved_by, first_response_at, resolved_at,
-            created_at, updated_at
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11) RETURNING id`,
-          [
-            companyId, t.customer, t.email, t.channel, t.subject,
-            t.status, t.agent, t.resolvedBy, firstResponse, resolvedAt,
-            createdAt,
-          ],
-        );
-        convIds.push(rows[0].id);
-      }
-      console.log(`  Created ${convIds.length} conversations.`);
-
-      // Insert messages (actual schema: sender_type, sender_name, body)
-      let msgCount = 0;
-      const custMsgs = ['Hi, I need help.', 'Can you assist me?', 'Thanks for the help!', 'I have a question.'];
-      const aiMsgs = ['Hello! Let me help you with that.', 'Here are the steps...', 'I found the answer in our knowledge base.'];
-      const agentMsgs = ['I\'m taking over. Let me check.', 'I\'ve reviewed your issue.', 'Let me process that.'];
-
-      for (let ci = 0; ci < convIds.length; ci++) {
-        const t = convTemplates[ci];
-        const baseTime = new Date(Date.now() - t.daysAgo * 86400000);
-        const numMsgs = 2 + Math.floor(Math.random() * 4);
-
-        for (let mi = 0; mi < numMsgs; mi++) {
-          const msgTime = new Date(baseTime.getTime() + mi * (30000 + Math.random() * 120000));
-          const isCustomer = mi % 2 === 0;
-
-          if (isCustomer) {
-            await pool.query(
-              'INSERT INTO messages (conversation_id, sender_type, sender_name, body, created_at) VALUES ($1,$2,$3,$4,$5)',
-              [convIds[ci], 'customer', t.customer, custMsgs[mi % custMsgs.length], msgTime],
-            );
-          } else {
-            const isAi = !t.agent;
-            await pool.query(
-              'INSERT INTO messages (conversation_id, sender_type, sender_name, body, created_at) VALUES ($1,$2,$3,$4,$5)',
-              [convIds[ci], isAi ? 'ai' : 'agent', isAi ? 'AI Assistant' : t.agent, isAi ? aiMsgs[mi % aiMsgs.length] : agentMsgs[mi % agentMsgs.length], msgTime],
-            );
-          }
-          msgCount++;
-        }
-      }
-      console.log(`  Created ${msgCount} messages.`);
-
-      // Seed leads (only if none exist)
-      const existingLeads = await pool.query(
-        'SELECT COUNT(*)::int AS cnt FROM leads WHERE company_id = $1', [companyId],
-      );
-      if (existingLeads.rows[0].cnt === 0) {
-        const leadData = [
-          { name: 'John Doe', email: 'john@ex.com', status: 'qualified', rating: 'hot', intent: 'Purchase Intent', score: 85 },
-          { name: 'Sarah Connor', email: 'sarah@ex.com', status: 'contacted', rating: 'warm', intent: 'Demo Request', score: 70 },
-          { name: 'Mike Chen', email: 'mike@ex.com', status: 'new', rating: 'cold', intent: 'Technical Inquiry', score: 30 },
-          { name: 'Emma Wilson', email: 'emma@ex.com', status: 'converted', rating: 'hot', intent: 'Purchase Intent', score: 95 },
-          { name: 'Carlos Ruiz', email: 'carlos@ex.com', status: 'contacted', rating: 'warm', intent: 'Demo Request', score: 60 },
-        ];
-        for (let i = 0; i < leadData.length; i++) {
-          const l = leadData[i];
-          await pool.query(
-            `INSERT INTO leads (
-              company_id, display_id, name, email, source, status, rating,
-              conversation_id, first_message, message_count, intent, score,
-              ai_summary, created_at, updated_at
-            ) VALUES ($1,$2,$3,$4,'chat_widget',$5,$6,$7,'Initial inquiry',$8,$9,$10,$11, NOW() - ($12 || ' days')::interval, NOW())`,
-            [
-              companyId, `LD-${String(i + 1).padStart(4, '0')}`, l.name, l.email,
-              l.status, l.rating, convIds[i] ?? null, Math.floor(Math.random() * 8) + 1,
-              l.intent, l.score, `${l.intent} from ${l.name}`, String(Math.floor(Math.random() * 25)),
-            ],
-          );
-        }
-        console.log(`  Created ${leadData.length} leads.`);
-      } else {
-        console.log(`  ${existingLeads.rows[0].cnt} leads already exist. Skipping.`);
-      }
-    }
+    // ── 8. No demo data ─────────────────────────────────────────────────
+    // Conversations, messages, and leads are created by real users via the
+    // chat widget and dashboard. No fake/demo data is seeded.
+    console.log('Skipping demo data — production mode (real data only).');
 
     // ── Done ──────────────────────────────────────────────────────────────
     console.log('\nSeed completed successfully!');

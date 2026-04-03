@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Save, Loader2, Palette, MessageSquare,
-  Layout, Zap, Bell, Code, ChevronDown,
+  Layout, Zap, Bell, ChevronDown, Bot,
 } from 'lucide-react';
 import { api, ApiError } from '../../../lib/api';
 import { ChatWidgetPreview, type WidgetConfig } from '../../../components/ChatWidgetPreview';
@@ -13,7 +13,7 @@ import { inputStyles } from '../../../components/ui/Input';
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
-type SectionId = 'branding' | 'colors' | 'layout' | 'behavior' | 'experience' | 'advanced';
+type SectionId = 'branding' | 'colors' | 'layout' | 'behavior' | 'experience' | 'features' | 'ai';
 
 const SECTIONS: { id: SectionId; name: string; icon: typeof Palette }[] = [
   { id: 'branding', name: 'Branding', icon: MessageSquare },
@@ -21,7 +21,8 @@ const SECTIONS: { id: SectionId; name: string; icon: typeof Palette }[] = [
   { id: 'layout', name: 'Layout', icon: Layout },
   { id: 'behavior', name: 'Behavior', icon: Zap },
   { id: 'experience', name: 'Experience', icon: Bell },
-  { id: 'advanced', name: 'Advanced', icon: Code },
+  { id: 'features', name: 'Features', icon: Zap },
+  { id: 'ai', name: 'AI', icon: Bot },
 ];
 
 const DEFAULTS: WidgetConfig = {
@@ -41,6 +42,14 @@ const DEFAULTS: WidgetConfig = {
   notificationBadge: true,
   pulseAnimation: true,
   customCSS: '',
+  featureLiveTyping: true,
+  featureSeenStatus: true,
+  featureFileUpload: true,
+  featureEmoji: true,
+  featureSound: true,
+  featureChatHistory: true,
+  featureEndChat: true,
+  featureAiSuggestions: true,
 };
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
@@ -124,6 +133,19 @@ export default function WidgetSettingsPage() {
         </button>
       </div>
 
+      {/* Embed code */}
+      <div className="rounded-lg border bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-semibold">Install on your website</p>
+          <button onClick={() => { const el = document.getElementById('embed-code') as HTMLTextAreaElement; el?.select(); document.execCommand('copy'); }}
+            className="text-[11px] font-medium text-primary hover:underline">Copy code</button>
+        </div>
+        <textarea id="embed-code" readOnly rows={2}
+          value={`<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js" data-key="REPLACE_WITH_YOUR_PUBLIC_KEY"></script>`}
+          className="w-full rounded-lg border border-border/50 bg-muted/30 px-3 py-2 font-mono text-[11px] text-muted-foreground resize-none focus:outline-none" />
+        <p className="mt-1.5 text-[10px] text-muted-foreground">Add this before the closing &lt;/body&gt; tag on your website. Get your public key from Company settings.</p>
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-2">
         {/* ── Left: Settings ────────────────────────────────────────────── */}
         <div className="space-y-4">
@@ -166,12 +188,18 @@ export default function WidgetSettingsPage() {
           {/* ── COLORS ───────────────────────────────────────────────────── */}
           {activeSection === 'colors' && (
             <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
-              <div><h3 className="font-semibold">Colors</h3><p className="text-xs text-muted-foreground">Customize every color of your widget</p></div>
-              <div className="grid grid-cols-2 gap-4">
-                <ColorInput label="Header / Button" value={config.headerColor} onChange={(v) => set('headerColor', v)} />
-                <ColorInput label="User Messages" value={config.userMessageColor} onChange={(v) => set('userMessageColor', v)} />
-                <ColorInput label="Bot Messages" value={config.botMessageColor} onChange={(v) => set('botMessageColor', v)} />
-                <ColorInput label="Chat Background" value={config.chatBackground} onChange={(v) => set('chatBackground', v)} />
+              <div>
+                <h3 className="font-semibold">Theme</h3>
+                <p className="text-xs text-muted-foreground">Pick a primary color. All other colors are auto-generated for perfect contrast and readability.</p>
+              </div>
+              <ColorInput label="Primary Color" value={config.headerColor} onChange={(v) => {
+                set('headerColor', v);
+                set('userMessageColor', v);
+              }} />
+              <div className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/30 px-4 py-3">
+                <p className="text-xs text-muted-foreground">
+                  The theme engine automatically generates header, button, message bubble, background, and text colors from your primary color with proper contrast ratios.
+                </p>
               </div>
             </div>
           )}
@@ -247,19 +275,32 @@ export default function WidgetSettingsPage() {
             </div>
           )}
 
-          {/* ── ADVANCED ─────────────────────────────────────────────────── */}
-          {activeSection === 'advanced' && (
-            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
-              <div><h3 className="font-semibold">Advanced</h3><p className="text-xs text-muted-foreground">Custom CSS for power users</p></div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Custom CSS</label>
-                <textarea value={config.customCSS} onChange={(e) => set('customCSS', e.target.value)}
-                  rows={8} placeholder=".chatbox-widget { /* your styles */ }"
-                  className={`${inputCls} h-auto resize-none font-mono text-xs`} />
-                <p className="text-xs text-muted-foreground">Scoped to the widget container. Max 5000 characters.</p>
-              </div>
+          {/* ── FEATURES ──────────────────────────────────────────────────── */}
+          {activeSection === 'features' && (
+            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-4">
+              <div><h3 className="font-semibold">Feature Toggles</h3><p className="text-xs text-muted-foreground">Enable or disable specific widget capabilities</p></div>
+              {([
+                { key: 'featureLiveTyping' as const, label: 'Live Typing Preview', desc: 'Show what user types in real-time to agents' },
+                { key: 'featureSeenStatus' as const, label: 'Seen / Delivered Status', desc: 'Show message delivery and read receipts' },
+                { key: 'featureFileUpload' as const, label: 'File Attachments', desc: 'Allow visitors to send images and files' },
+                { key: 'featureEmoji' as const, label: 'Emoji Picker', desc: 'Show emoji selector in chat input' },
+                { key: 'featureSound' as const, label: 'Sound Notifications', desc: 'Play sound on new messages' },
+                { key: 'featureChatHistory' as const, label: 'Chat History', desc: 'Let visitors see previous conversations' },
+                { key: 'featureEndChat' as const, label: 'End Chat Button', desc: 'Allow visitors to close conversations' },
+                { key: 'featureAiSuggestions' as const, label: 'AI Suggestions', desc: 'Show quick-reply suggestions to agents' },
+              ]).map(({ key, label, desc }) => (
+                <div key={key} className="flex items-center justify-between rounded-lg border px-4 py-3">
+                  <div><p className="text-sm font-medium">{label}</p><p className="text-xs text-muted-foreground">{desc}</p></div>
+                  <Toggle enabled={config[key]} onToggle={() => set(key, !config[key])} />
+                </div>
+              ))}
             </div>
           )}
+
+          {/* ── AI ─────────────────────────────────────────────────────── */}
+          {activeSection === 'ai' && <AiSettingsSection />}
+
+          {/* Advanced section removed */}
         </div>
 
         {/* ── Right: Live Preview ───────────────────────────────────────── */}
@@ -274,6 +315,71 @@ export default function WidgetSettingsPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── AI Settings Sub-component ──────────────────────────────────────────────
+
+function AiSettingsSection() {
+  const [tone, setTone] = useState('friendly');
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [knowledgeContext, setKnowledgeContext] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    api.get<{ tone: string; customPrompt: string; knowledgeContext: string }>('/settings/ai')
+      .then((d) => { setTone(d.tone); setCustomPrompt(d.customPrompt); setKnowledgeContext(d.knowledgeContext); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    try { await api.patch('/settings/ai', { tone, customPrompt, knowledgeContext }); } catch {}
+    finally { setSaving(false); }
+  }
+
+  if (!loaded) return <div className="p-5"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>;
+
+  return (
+    <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
+      <div><h3 className="font-semibold">AI Assistant</h3><p className="text-xs text-muted-foreground">Configure how AI responds to customers</p></div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Tone</label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { value: 'friendly', label: 'Friendly', desc: 'Warm and conversational' },
+            { value: 'professional', label: 'Professional', desc: 'Formal and precise' },
+            { value: 'sales', label: 'Sales', desc: 'Enthusiastic and persuasive' },
+            { value: 'support', label: 'Support', desc: 'Empathetic and solution-focused' },
+          ].map((t) => (
+            <button key={t.value} onClick={() => setTone(t.value)}
+              className={`rounded-lg border p-3 text-left transition ${tone === t.value ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-input hover:border-primary/30'}`}>
+              <p className="text-sm font-medium">{t.label}</p>
+              <p className="text-xs text-muted-foreground">{t.desc}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Custom Instructions</label>
+        <textarea value={customPrompt} onChange={(e) => setCustomPrompt(e.target.value)} rows={4}
+          placeholder="e.g., Always mention our 30-day trial. Our main product is CloudSync..."
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none" />
+        <p className="text-xs text-muted-foreground">Custom instructions the AI follows. Be specific about your product and policies.</p>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Knowledge Context</label>
+        <textarea value={knowledgeContext} onChange={(e) => setKnowledgeContext(e.target.value)} rows={6}
+          placeholder="Paste FAQ, product info, pricing, policies..."
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none" />
+        <p className="text-xs text-muted-foreground">Knowledge the AI uses to answer questions. Max 5000 characters.</p>
+      </div>
+      <button onClick={handleSave} disabled={saving}
+        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50">
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save AI Settings
+      </button>
     </div>
   );
 }
