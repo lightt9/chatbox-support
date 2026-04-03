@@ -12,13 +12,13 @@
     "studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "^0.39.0",
+    "drizzle-orm": "^0.36.4",
     "pg": "^8.13.0",
     "pgvector": "^0.2.0"
   },
   "devDependencies": {
     "@types/pg": "^8.11.0",
-    "drizzle-kit": "^0.30.0",
+    "drizzle-kit": "^0.27.2",
     "typescript": "^5.7.0"
   }
 }
