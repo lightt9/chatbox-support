@@ -14,9 +14,10 @@ COPY packages/channel-sdk/package.json packages/channel-sdk/
 # Install all dependencies (not frozen - workspace may differ)
 RUN pnpm install --no-frozen-lockfile
 
-# Copy all source
+# Copy all source (bust cache on code changes)
 COPY packages/ packages/
 COPY apps/api/ apps/api/
+RUN echo "build_bust=$(date +%s)" > /tmp/.build_time
 
 # Build the API
 WORKDIR /app/apps/api
