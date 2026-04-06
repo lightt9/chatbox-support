@@ -23,12 +23,16 @@ RUN echo "build_bust=$(date +%s)" > /tmp/.build_time
 WORKDIR /app/apps/api
 RUN pnpm run build
 
-# Production
+# Production — slim image without build tools
 FROM node:20-slim
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-COPY --from=base /app/ /app/
+# Only copy what's needed for runtime
+COPY --from=base /app/node_modules /app/node_modules
+COPY --from=base /app/apps/api/node_modules /app/apps/api/node_modules
+COPY --from=base /app/apps/api/dist /app/apps/api/dist
+COPY --from=base /app/apps/api/package.json /app/apps/api/package.json
+COPY --from=base /app/packages /app/packages
 
 RUN mkdir -p /app/apps/api/uploads
 
