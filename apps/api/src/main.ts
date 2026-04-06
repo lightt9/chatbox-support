@@ -17,6 +17,10 @@ process.on('unhandledRejection', (reason) => {
   console.error('[FATAL] unhandledRejection:', reason);
   process.exit(1);
 });
+process.on('exit', (code) => {
+  console.error('[FATAL] process.exit called with code:', code);
+  console.trace('[FATAL] exit trace');
+});
 
 async function bootstrap() {
   const port = process.env.PORT || process.env.API_PORT || 3001;
@@ -26,7 +30,8 @@ async function bootstrap() {
 
   console.log('[boot] creating app...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    abortOnError: false,
+    abortOnError: true,
+    bufferLogs: false,
   });
   console.log('[boot] app created');
 
