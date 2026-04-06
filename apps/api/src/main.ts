@@ -5,8 +5,6 @@ import compression from 'compression';
 import { join } from 'path';
 import * as fs from 'fs';
 import * as http from 'http';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -23,22 +21,22 @@ async function bootstrap() {
   const port = Number(process.env.PORT || process.env.API_PORT || 3001);
   console.log('[boot] port=' + port + ' env=' + process.env.NODE_ENV);
 
-  // Create express + HTTP server FIRST so the port opens immediately
-  const server = express();
-  const httpServer = http.createServer(server);
-
-  // Health endpoint available before Nest finishes
-  server.get('/health', (_req, res) => res.json({ status: 'starting' }));
-
-  // Open the port IMMEDIATELY so Render sees it
-  httpServer.listen(port, '0.0.0.0', () => {
-    console.log('[boot] HTTP server listening on port ' + port);
+  // Open a bare HTTP server FIRST so Render sees the port immediately
+  const tempServer = http.createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'starting' }));
   });
 
-  // Now create NestJS on top of the existing express instance
+  await new Promise<void>((resolve) => {
+    tempServer.listen(port, '0.0.0.0', () => {
+      console.log('[boot] temp HTTP server on port ' + port);
+      resolve();
+    });
+  });
+
+  // Now create NestJS (this may take a while on slow CPUs)
   console.log('[boot] creating NestJS app...');
-  const adapter = new ExpressAdapter(server);
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
   console.log('[boot] NestJS app created');
@@ -46,15 +44,12 @@ async function bootstrap() {
   const uploadsDir = join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
   app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
-
   app.use(compression());
-
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -63,12 +58,13 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  console.log('[boot] initializing routes...');
-  await app.init();
-  console.log('[boot] READY — all routes initialized');
+  // Close temp server, then start Nest on the same port
+  console.log('[boot] closing temp server, starting Nest...');
+  await new Promise<void>((resolve) => tempServer.close(() => resolve()));
+  await app.listen(port, '0.0.0.0');
+  console.log('[boot] READY on port ' + port);
 }
 
 bootstrap().catch((err) => {
