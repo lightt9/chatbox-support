@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: chatbox-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard (Neon connection string)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: "15m"
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: "7d"
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false  # Set to your Vercel frontend URL
+      - key: API_URL
+        sync: false  # Set to https://chatbox-api.onrender.com
+      - key: ADMIN_URL
+        sync: false  # Set to your Vercel frontend URL
