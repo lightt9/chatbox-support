@@ -1,12 +1,14 @@
 import { NestFactory } from '@nestjs/core';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { ExpressAdapter, NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { join } from 'path';
 import * as fs from 'fs';
-import * as http from 'http';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const express = require('express');
 
 process.on('uncaughtException', (err) => {
   console.error('[FATAL] uncaughtException:', err);
@@ -21,22 +23,18 @@ async function bootstrap() {
   const port = Number(process.env.PORT || process.env.API_PORT || 3001);
   console.log('[boot] port=' + port + ' env=' + process.env.NODE_ENV);
 
-  // Open a bare HTTP server FIRST so Render sees the port immediately
-  const tempServer = http.createServer((_req, res) => {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'starting' }));
+  // Create express instance and listen IMMEDIATELY
+  const expressApp = express();
+  expressApp.get('/health', (_req: any, res: any) => res.json({ status: 'ok' }));
+
+  const server = expressApp.listen(port, '0.0.0.0', () => {
+    console.log('[boot] express listening on port ' + port);
   });
 
-  await new Promise<void>((resolve) => {
-    tempServer.listen(port, '0.0.0.0', () => {
-      console.log('[boot] temp HTTP server on port ' + port);
-      resolve();
-    });
-  });
-
-  // Now create NestJS (this may take a while on slow CPUs)
+  // Create NestJS on top of the same express instance
   console.log('[boot] creating NestJS app...');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+  const adapter = new ExpressAdapter(expressApp);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
     logger: ['error', 'warn', 'log'],
   });
   console.log('[boot] NestJS app created');
@@ -60,11 +58,9 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Close temp server, then start Nest on the same port
-  console.log('[boot] closing temp server, starting Nest...');
-  await new Promise<void>((resolve) => tempServer.close(() => resolve()));
-  await app.listen(port, '0.0.0.0');
-  console.log('[boot] READY on port ' + port);
+  console.log('[boot] initializing Nest routes...');
+  await app.init();
+  console.log('[boot] READY — all routes live on port ' + port);
 }
 
 bootstrap().catch((err) => {
