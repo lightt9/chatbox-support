@@ -5,6 +5,5 @@ dist
 *.md
 .env
 .env.local
-apps/admin
 infrastructure
 docs
