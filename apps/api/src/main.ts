@@ -4,6 +4,9 @@ import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { join } from 'path';
 import * as fs from 'fs';
+import * as http from 'http';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -16,34 +19,42 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-const keepAlive = setInterval(() => {}, 30_000);
-const startupTimeout = setTimeout(() => {
-  console.error('[FATAL] Startup timed out after 90s');
-  process.exit(1);
-}, 90_000);
-
 async function bootstrap() {
-  const port = process.env.PORT || process.env.API_PORT || 3001;
+  const port = Number(process.env.PORT || process.env.API_PORT || 3001);
   console.log('[boot] port=' + port + ' env=' + process.env.NODE_ENV);
 
-  // Step 1: Create (does NOT resolve routes)
-  console.log('[boot] step 1: NestFactory.create...');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+  // Create express + HTTP server FIRST so the port opens immediately
+  const server = express();
+  const httpServer = http.createServer(server);
+
+  // Health endpoint available before Nest finishes
+  server.get('/health', (_req, res) => res.json({ status: 'starting' }));
+
+  // Open the port IMMEDIATELY so Render sees it
+  httpServer.listen(port, '0.0.0.0', () => {
+    console.log('[boot] HTTP server listening on port ' + port);
+  });
+
+  // Now create NestJS on top of the existing express instance
+  console.log('[boot] creating NestJS app...');
+  const adapter = new ExpressAdapter(server);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
     logger: ['error', 'warn', 'log'],
   });
-  console.log('[boot] step 1 done');
+  console.log('[boot] NestJS app created');
 
-  // Step 2: Middleware
-  console.log('[boot] step 2: middleware...');
   const uploadsDir = join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
   app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
+
   app.use(compression());
+
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -52,27 +63,15 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
   app.useGlobalFilters(new HttpExceptionFilter());
-  console.log('[boot] step 2 done');
 
-  // Step 3: Init (resolves routes + gateways)
-  console.log('[boot] step 3: app.init...');
+  console.log('[boot] initializing routes...');
   await app.init();
-  console.log('[boot] step 3 done');
-
-  // Step 4: Listen
-  console.log('[boot] step 4: listen on ' + port + '...');
-  const server = app.getHttpServer();
-  server.listen(Number(port), '0.0.0.0', () => {
-    clearInterval(keepAlive);
-    clearTimeout(startupTimeout);
-    console.log('[boot] READY on port ' + port);
-  });
+  console.log('[boot] READY — all routes initialized');
 }
 
 bootstrap().catch((err) => {
-  clearInterval(keepAlive);
-  clearTimeout(startupTimeout);
   console.error('[boot] FATAL:', err);
   process.exit(1);
 });
