@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { DB_POOL } from '../../config/database.module';
 import { AiService, ChatMessage } from '../ai/ai.service';
 import { ChatGateway } from './chat.gateway';
@@ -41,7 +41,7 @@ export class ChatService {
   constructor(
     @Inject(DB_POOL) private readonly pool: any,
     private readonly aiService: AiService,
-    private readonly gateway: ChatGateway,
+    @Optional() private readonly gateway: ChatGateway,
   ) {}
 
   async handleMessage(
@@ -65,7 +65,7 @@ export class ChatService {
           message,
         );
 
-        this.gateway.emitNewMessage(companyId, conversationId, msg);
+        this.gateway?.emitNewMessage(companyId, conversationId, msg);
         await this.touchConversation(conversationId);
 
         return {
@@ -97,7 +97,7 @@ export class ChatService {
       customerName ?? 'Customer',
       message,
     );
-    this.gateway.emitNewMessage(companyId, convId, customerMsg);
+    this.gateway?.emitNewMessage(companyId, convId, customerMsg);
 
     // 4. Check for keyword-based escalation
     const keywordEscalation = this.detectEscalationKeywords(message);
@@ -129,7 +129,7 @@ export class ChatService {
 
     // 9. Save AI response
     const aiMsg = await this.saveMessage(convId, 'ai', 'AI Assistant', finalReply);
-    this.gateway.emitNewMessage(companyId, convId, aiMsg);
+    this.gateway?.emitNewMessage(companyId, convId, aiMsg);
 
     // 10. Update conversation
     await this.touchConversation(convId);
@@ -234,7 +234,7 @@ export class ChatService {
     // Get company ID to emit via WebSocket
     const conv = await this.getConversationInfo(conversationId);
     if (conv) {
-      this.gateway.emitNewMessage(conv.companyId, conversationId, msg as any);
+      this.gateway?.emitNewMessage(conv.companyId, conversationId, msg as any);
     }
 
     await this.touchConversation(conversationId);
@@ -305,7 +305,7 @@ export class ChatService {
     const convId = rows[0].id;
 
     // Emit new conversation to dashboard
-    this.gateway.emitConversationUpdate(companyId, convId, {
+    this.gateway?.emitConversationUpdate(companyId, convId, {
       event: 'created',
       customerName: customerName ?? 'Visitor',
       customerEmail,
@@ -401,7 +401,7 @@ export class ChatService {
       [conversationId],
     );
 
-    this.gateway.emitConversationUpdate(companyId, conversationId, {
+    this.gateway?.emitConversationUpdate(companyId, conversationId, {
       event: 'escalated',
       status: 'escalated',
     });
@@ -416,7 +416,7 @@ export class ChatService {
       [conversationId],
     );
 
-    this.gateway.emitConversationUpdate(companyId, conversationId, {
+    this.gateway?.emitConversationUpdate(companyId, conversationId, {
       event: 'resolved',
       status: 'resolved',
     });

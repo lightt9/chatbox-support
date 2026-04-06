@@ -102,7 +102,7 @@ export default function ReportsPage() {
 
   /* ── KPI Card ─────────────────────────────────────────────────────────────── */
   const KpiCard = ({ title, value, unit, change, icon: Icon }: { title: string; value: string; unit?: string; change: number; icon: any }) => (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
+    <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{title}</p>
         <Icon className="h-5 w-5 text-muted-foreground/50" />
@@ -125,7 +125,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
@@ -136,16 +136,16 @@ export default function ReportsPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <button onClick={() => setShowDateMenu(!showDateMenu)} className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted">
+            <button onClick={() => setShowDateMenu(!showDateMenu)} className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted/40 cursor-pointer transition-colors duration-150">
               <Calendar className="h-4 w-4" /> Last {dateRange} days <ChevronDown className="h-3 w-3" />
             </button>
             {showDateMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowDateMenu(false)} />
-                <div className="absolute right-0 z-50 mt-1 w-40 rounded-md border bg-card py-1 shadow-lg">
+                <div className="absolute right-0 z-50 mt-1 w-40 rounded-xl border border-border/40 bg-card py-1" style={{ boxShadow: 'var(--shadow-lg)' }}>
                   {PRESETS.map(p => (
                     <button key={p.days} onClick={() => { setDateRange(p.days); setShowDateMenu(false); }}
-                      className={cn('block w-full px-4 py-2 text-left text-sm hover:bg-muted', dateRange === p.days && 'font-semibold text-primary')}>
+                      className={cn('block w-full px-4 py-2 text-left text-sm hover:bg-muted/40 cursor-pointer transition-colors duration-150', dateRange === p.days && 'font-semibold text-primary')}>
                       {p.label}
                     </button>
                   ))}
@@ -154,11 +154,11 @@ export default function ReportsPage() {
             )}
           </div>
           <div className="relative">
-            <button onClick={() => handleExport('csv')} className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted">
+            <button onClick={() => handleExport('csv')} className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted/40 cursor-pointer transition-colors duration-150">
               <Download className="h-4 w-4" /> CSV
             </button>
           </div>
-          <button onClick={() => handleExport('json')} className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted">
+          <button onClick={() => handleExport('json')} className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted/40 cursor-pointer transition-colors duration-150">
             <Download className="h-4 w-4" /> JSON
           </button>
         </div>
@@ -177,7 +177,7 @@ export default function ReportsPage() {
       {/* ── Charts Row 1 ────────────────────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Conversation Volume */}
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <h3 className="font-semibold">Conversation Volume</h3>
           <p className="text-sm text-muted-foreground">Daily conversations over time</p>
           <div className="mt-4 h-64">
@@ -187,7 +187,7 @@ export default function ReportsPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" tickFormatter={fmtDate} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip labelFormatter={fmtDate} contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Tooltip labelFormatter={fmtDate} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.5)', borderRadius: '0.75rem', color: 'hsl(var(--foreground))', fontSize: '0.8125rem', padding: '8px 12px', boxShadow: 'var(--shadow-lg)' }} />
                 <Legend />
                 <Area type="monotone" dataKey="resolved" stackId="1" fill="hsl(142, 76%, 36%)" stroke="hsl(142, 76%, 36%)" fillOpacity={0.3} name="Resolved" />
                 <Area type="monotone" dataKey="open" stackId="1" fill="hsl(38, 92%, 50%)" stroke="hsl(38, 92%, 50%)" fillOpacity={0.3} name="Open" />
@@ -199,7 +199,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Agent Performance */}
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <h3 className="font-semibold">Agent Performance</h3>
           <p className="text-sm text-muted-foreground">Conversations handled per agent</p>
           <div className="mt-4 h-64">
@@ -209,7 +209,7 @@ export default function ReportsPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis dataKey="agent" type="category" width={100} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.5)', borderRadius: '0.75rem', color: 'hsl(var(--foreground))', fontSize: '0.8125rem', padding: '8px 12px', boxShadow: 'var(--shadow-lg)' }} />
                 <Legend />
                 <Bar dataKey="resolved" fill="hsl(142, 76%, 36%)" name="Resolved" radius={[0, 4, 4, 0]} />
                 <Bar dataKey="totalConversations" fill="hsl(221, 83%, 53%)" name="Total" radius={[0, 4, 4, 0]} />
@@ -223,7 +223,7 @@ export default function ReportsPage() {
       {/* ── Charts Row 2 ────────────────────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Response Times */}
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <h3 className="font-semibold">Response Times</h3>
           <p className="text-sm text-muted-foreground">Average first response and resolution times (minutes)</p>
           <div className="mt-4 h-64">
@@ -233,7 +233,7 @@ export default function ReportsPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" tickFormatter={fmtDate} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip labelFormatter={fmtDate} formatter={(v: number) => fmtMin(v)} contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Tooltip labelFormatter={fmtDate} formatter={(v: number) => fmtMin(v)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.5)', borderRadius: '0.75rem', color: 'hsl(var(--foreground))', fontSize: '0.8125rem', padding: '8px 12px', boxShadow: 'var(--shadow-lg)' }} />
                 <Legend />
                 <Line type="monotone" dataKey="avgFirstResponseMin" stroke="hsl(221, 83%, 53%)" name="First Response" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="avgResolutionMin" stroke="hsl(262, 83%, 58%)" name="Resolution" strokeWidth={2} dot={false} />
@@ -244,7 +244,7 @@ export default function ReportsPage() {
         </div>
 
         {/* CSAT */}
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <h3 className="font-semibold">Customer Satisfaction</h3>
           <p className="text-sm text-muted-foreground">CSAT score over time</p>
           <div className="mt-4 h-64">
@@ -254,7 +254,7 @@ export default function ReportsPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" tickFormatter={fmtDate} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis domain={[1, 5]} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip labelFormatter={fmtDate} contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Tooltip labelFormatter={fmtDate} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.5)', borderRadius: '0.75rem', color: 'hsl(var(--foreground))', fontSize: '0.8125rem', padding: '8px 12px', boxShadow: 'var(--shadow-lg)' }} />
                 <Area type="monotone" dataKey="avgScore" fill="hsl(38, 92%, 50%)" stroke="hsl(38, 92%, 50%)" fillOpacity={0.2} name="Avg Score" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
@@ -266,7 +266,7 @@ export default function ReportsPage() {
       {/* ── Channel Breakdown + Agent Table ──────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Channel Pie */}
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <h3 className="font-semibold">Channel Breakdown</h3>
           <p className="text-sm text-muted-foreground">Conversations by channel</p>
           <div className="mt-4 h-64">
@@ -276,7 +276,7 @@ export default function ReportsPage() {
                 <Pie data={channels} dataKey="total" nameKey="channel" cx="50%" cy="50%" outerRadius={90} label={({ name, percent }: any) => `${channelLabels[name] ?? name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
                   {channels.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(v: number, name: string) => [v, channelLabels[name] ?? name]} contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Tooltip formatter={(v: number, name: string) => [v, channelLabels[name] ?? name]} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.5)', borderRadius: '0.75rem', color: 'hsl(var(--foreground))', fontSize: '0.8125rem', padding: '8px 12px', boxShadow: 'var(--shadow-lg)' }} />
               </PieChart>
             </ResponsiveContainer>
             )}
@@ -284,7 +284,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Agent Table */}
-        <div className="lg:col-span-2 rounded-lg border bg-card shadow-sm">
+        <div className="lg:col-span-2 rounded-xl border border-border/40 bg-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <div className="p-6 pb-3">
             <h3 className="font-semibold">Agent Leaderboard</h3>
             <p className="text-sm text-muted-foreground">Performance breakdown per agent</p>
@@ -292,20 +292,20 @@ export default function ReportsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Agent</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Convs</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Resolved</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Avg Resolution</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">1st Response</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">CSAT</th>
+                <tr className="bg-muted/50" style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Agent</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Convs</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Resolved</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Avg Resolution</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">1st Response</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">CSAT</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody>
                 {agents.length === 0 ? (
                   <tr><td colSpan={6} className="px-6 py-8 text-center text-sm text-muted-foreground">No agent data for this period</td></tr>
                 ) : agents.map(a => (
-                  <tr key={a.agent} className="hover:bg-muted/30">
+                  <tr key={a.agent} className="hover:bg-muted/30 transition-colors duration-150" style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}>
                     <td className="whitespace-nowrap px-6 py-3 text-sm font-medium">{a.agent}</td>
                     <td className="whitespace-nowrap px-6 py-3 text-sm">{a.totalConversations}</td>
                     <td className="whitespace-nowrap px-6 py-3 text-sm">{a.resolved}</td>
@@ -325,7 +325,7 @@ export default function ReportsPage() {
       </div>
 
       {/* ── Recent Conversations ─────────────────────────────────────────────── */}
-      <div className="rounded-lg border bg-card shadow-sm">
+      <div className="rounded-xl border border-border/40 bg-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
         <div className="p-6 pb-3">
           <h3 className="font-semibold">Recent Conversations</h3>
           <p className="text-sm text-muted-foreground">Latest 50 conversations in the selected period</p>
@@ -333,21 +333,21 @@ export default function ReportsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Subject</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Agent</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Channel</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Duration</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Date</th>
+              <tr className="bg-muted/50" style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}>
+                <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Customer</th>
+                <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Subject</th>
+                <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Agent</th>
+                <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Channel</th>
+                <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</th>
+                <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Duration</th>
+                <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody>
               {recent.length === 0 ? (
                 <tr><td colSpan={7} className="px-6 py-8 text-center text-sm text-muted-foreground">No conversations for this period</td></tr>
               ) : recent.map(c => (
-                <tr key={c.id} className="hover:bg-muted/30">
+                <tr key={c.id} className="hover:bg-muted/30 transition-colors duration-150" style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}>
                   <td className="whitespace-nowrap px-6 py-3 text-sm font-medium">{c.customerName}</td>
                   <td className="whitespace-nowrap px-6 py-3 text-sm max-w-[200px] truncate">{c.subject}</td>
                   <td className="whitespace-nowrap px-6 py-3 text-sm">{c.agent}</td>

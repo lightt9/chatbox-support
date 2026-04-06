@@ -77,9 +77,9 @@ function slaTimer(lastMsgAt: string | null, senderType: string | null): string |
 }
 
 const statusCfg: Record<string, { label: string; color: string; dot: string }> = {
-  open: { label: 'Active', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', dot: 'bg-green-500' },
-  escalated: { label: 'Escalated', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300', dot: 'bg-red-500' },
-  resolved: { label: 'Resolved', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700/40 dark:text-gray-300', dot: 'bg-gray-400' },
+  open: { label: 'Active', color: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300', dot: 'bg-green-500' },
+  escalated: { label: 'Escalated', color: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300', dot: 'bg-red-500' },
+  resolved: { label: 'Resolved', color: 'bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-300', dot: 'bg-gray-400' },
 };
 
 const TAG_PRESETS = ['VIP', 'Lead', 'Interested', 'Complaint', 'Bug', 'Feature Request', 'Spam'];
@@ -347,16 +347,16 @@ export default function ConversationsPage() {
 
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] overflow-hidden rounded-xl bg-card shadow-sm ring-1 ring-border/50">
+    <div className="flex h-[calc(100vh-5rem)] overflow-hidden rounded-xl border border-border/40 bg-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
 
       {/* ═══ LEFT: Conversation List ═══ */}
-      <div className={cn('flex w-full flex-col border-r border-border/50 md:w-[320px] md:shrink-0', selectedId && 'hidden md:flex')}>
+      <div className={cn('flex w-full flex-col md:w-[320px] md:shrink-0', selectedId && 'hidden md:flex')} style={{ borderRight: '1px solid hsl(var(--border) / 0.4)' }}>
 
         {/* Header + Search */}
-        <div className="px-4 pt-4 pb-3 space-y-3">
+        <div className="px-5 pt-5 pb-3 space-y-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-[15px] font-bold">Chats</h1>
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+            <h1 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Chats</h1>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
               {counts.open + counts.escalated}
             </span>
           </div>
@@ -364,15 +364,15 @@ export default function ConversationsPage() {
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
             <input type="text" placeholder="Search..." value={search}
               onChange={(e) => { setSearch(e.target.value); if (searchTimer.current) clearTimeout(searchTimer.current); searchTimer.current = setTimeout(() => fetchConversations(true), 300); }}
-              className="h-8 w-full rounded-lg border border-border/50 bg-background pl-8 pr-3 text-[12px] placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30" />
+              className="h-8 w-full rounded-lg border border-border/40 bg-background pl-8 pr-3 text-[12px] placeholder:text-muted-foreground/50 focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-colors duration-150" />
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-px px-4 pb-2">
+        <div className="flex gap-px px-5 pb-2">
           {statusTabs.map((t) => (
             <button key={t.key} onClick={() => { setStatusFilter(t.key); fetchConversations(true); }}
-              className={cn('flex-1 rounded-md py-1.5 text-[11px] font-medium transition-colors',
+              className={cn('flex-1 cursor-pointer rounded-lg py-1.5 text-[11px] font-medium transition-colors duration-150',
                 statusFilter === t.key ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground')}>
               {t.label}{t.count > 0 && <span className="ml-1 opacity-60">{t.count}</span>}
             </button>
@@ -380,10 +380,10 @@ export default function ConversationsPage() {
         </div>
 
         {/* Assign filter */}
-        <div className="flex gap-1 px-4 pb-3">
+        <div className="flex gap-1 px-5 pb-3">
           {assignTabs.map((t) => (
             <button key={t.key} onClick={() => { setAssignedFilter(t.key); fetchConversations(true); }}
-              className={cn('rounded-md px-2 py-1 text-[10px] font-medium transition-colors',
+              className={cn('cursor-pointer rounded-lg px-2 py-1 text-[10px] font-medium transition-colors duration-150',
                 assignedFilter === t.key ? 'bg-muted text-foreground' : 'text-muted-foreground/70 hover:text-muted-foreground')}>
               {t.label}
             </button>
@@ -393,9 +393,9 @@ export default function ConversationsPage() {
         {/* List */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-4 space-y-3">{[1,2,3,4].map((i) => <div key={i} className="flex gap-3 animate-pulse"><div className="h-9 w-9 rounded-full bg-muted shrink-0" /><div className="flex-1 space-y-2"><div className="h-3 w-2/3 rounded bg-muted" /><div className="h-2.5 w-full rounded bg-muted" /></div></div>)}</div>
+            <div className="p-5 space-y-4">{[1,2,3,4].map((i) => <div key={i} className="flex gap-3 animate-pulse"><div className="h-9 w-9 rounded-full bg-muted shrink-0" /><div className="flex-1 space-y-2"><div className="h-3 w-2/3 rounded-md bg-muted" /><div className="h-2.5 w-full rounded-md bg-muted" /></div></div>)}</div>
           ) : conversations.length === 0 ? (
-            <div className="flex h-40 flex-col items-center justify-center"><MessageSquare className="h-8 w-8 text-muted-foreground/20" /><p className="mt-2 text-[12px] text-muted-foreground">No conversations</p></div>
+            <div className="mx-5 mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-border/40 py-10"><MessageSquare className="h-8 w-8 text-muted-foreground/30" /><p className="mt-2 text-[12px] text-muted-foreground">No conversations</p></div>
           ) : (
             <div className="px-2">
               {conversations.map((conv) => {
@@ -404,8 +404,8 @@ export default function ConversationsPage() {
                 const unread = conv.lastSenderType === 'customer' && !active;
                 return (
                   <div key={conv.id} role="button" tabIndex={0} onClick={() => selectConv(conv.id)} onKeyDown={(e) => { if (e.key === 'Enter') selectConv(conv.id); }}
-                    className={cn('group relative flex gap-3 rounded-lg px-3 py-2.5 cursor-pointer transition-all duration-150',
-                      active ? 'bg-primary/[0.07]' : 'hover:bg-muted/50')}>
+                    className={cn('group relative flex gap-3 rounded-xl px-3 py-3 cursor-pointer transition-all duration-200',
+                      active ? 'bg-primary/[0.07]' : 'hover:bg-muted/30')}>
                     {/* Avatar */}
                     <div className="relative shrink-0">
                       <div className={cn('flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold',
@@ -426,7 +426,7 @@ export default function ConversationsPage() {
                       </div>
                       <p className={cn('mt-0.5 text-[11px] truncate', unread ? 'text-foreground' : 'text-muted-foreground')}>{conv.lastMessage ?? 'No messages'}</p>
                       <div className="mt-1 flex items-center gap-1.5">
-                        <span className={cn('rounded px-1.5 py-0.5 text-[9px] font-medium', cfg.color)}>{cfg.label}</span>
+                        <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-medium', cfg.color)}>{cfg.label}</span>
                         {conv.assignedAgent && <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><UserCheck className="h-2.5 w-2.5" />{conv.assignedAgent.split(' ')[0]}</span>}
                         {conv.lastSenderType === 'ai' && <Bot className="h-2.5 w-2.5 text-cyan-500" />}
                       </div>
@@ -443,46 +443,46 @@ export default function ConversationsPage() {
       <div className={cn('flex flex-1 flex-col', !selectedId && 'hidden md:flex')}>
         {!selectedId ? (
           <div className="flex flex-1 items-center justify-center">
-            <div className="text-center"><MessageSquare className="mx-auto h-10 w-10 text-muted-foreground/20" /><p className="mt-2 text-sm font-medium text-muted-foreground">Select a conversation</p></div>
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/40 px-10 py-14"><MessageSquare className="h-10 w-10 text-muted-foreground/30" /><p className="mt-3 text-sm font-medium text-muted-foreground">Select a conversation</p></div>
           </div>
         ) : (
           <>
             {/* Chat header bar */}
-            <div className="flex items-center justify-between border-b border-border/50 px-4 py-2.5">
+            <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }}>
               <div className="flex items-center gap-3 min-w-0">
-                <button onClick={() => setSelectedId(null)} className="md:hidden rounded-lg p-1 hover:bg-muted"><ArrowLeft className="h-4 w-4" /></button>
+                <button onClick={() => setSelectedId(null)} className="md:hidden cursor-pointer rounded-lg p-1 hover:bg-muted/40 transition-colors duration-150"><ArrowLeft className="h-4 w-4" /></button>
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">{initials(selected?.customerName ?? '')}</div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-semibold truncate">{selected?.customerName}</span>
-                    <span className={cn('rounded px-1.5 py-0.5 text-[9px] font-medium', statusCfg[selected?.status ?? 'open'].color)}>{statusCfg[selected?.status ?? 'open'].label}</span>
-                    {aiHandled && <span className="rounded bg-cyan-50 dark:bg-cyan-900/30 px-1.5 py-0.5 text-[9px] font-medium text-cyan-600 dark:text-cyan-300 flex items-center gap-0.5"><Bot className="h-2.5 w-2.5" />AI</span>}
+                    <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-medium', statusCfg[selected?.status ?? 'open'].color)}>{statusCfg[selected?.status ?? 'open'].label}</span>
+                    {aiHandled && <span className="rounded-full bg-cyan-50 dark:bg-cyan-500/10 px-2 py-0.5 text-[9px] font-medium text-cyan-600 dark:text-cyan-300 flex items-center gap-0.5"><Bot className="h-2.5 w-2.5" />AI</span>}
                   </div>
                   <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                     <span className="capitalize">{selected?.channel?.replace('_', ' ')}</span>
                     {selected?.customerEmail && <><span>&middot;</span><span className="truncate">{selected.customerEmail}</span></>}
-                    {slaText && <><span>&middot;</span><span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-0.5"><Timer className="h-2.5 w-2.5" />{slaText}</span></>}
+                    {slaText && <><span>&middot;</span><span className="text-amber-600 dark:text-amber-300 font-medium flex items-center gap-0.5"><Timer className="h-2.5 w-2.5" />{slaText}</span></>}
                   </div>
                 </div>
               </div>
               {/* Actions */}
               <div className="flex items-center gap-1 shrink-0">
                 {aiHandled ? (
-                  <button onClick={() => handleAssignTo(user?.name ?? null)} className="rounded-lg bg-primary/10 px-2.5 py-1.5 text-[11px] font-medium text-primary transition hover:bg-primary/15"><Hand className="mr-1 inline h-3 w-3" />Take over</button>
+                  <button onClick={() => handleAssignTo(user?.name ?? null)} className="cursor-pointer rounded-lg bg-primary/10 px-2.5 py-1.5 text-[11px] font-medium text-primary transition-colors duration-150 hover:bg-primary/15"><Hand className="mr-1 inline h-3 w-3" />Take over</button>
                 ) : selected?.assignedAgent && selected.status !== 'resolved' ? (
-                  <button onClick={() => handleAssignTo(null)} className="rounded-lg px-2.5 py-1.5 text-[11px] text-muted-foreground transition hover:bg-muted"><RotateCcw className="mr-1 inline h-3 w-3" />Return to AI</button>
+                  <button onClick={() => handleAssignTo(null)} className="cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] text-muted-foreground transition-colors duration-150 hover:bg-muted/40"><RotateCcw className="mr-1 inline h-3 w-3" />Return to AI</button>
                 ) : null}
                 {/* Assign dropdown */}
                 <div className="relative">
-                  <button onClick={() => setShowAssignDD(!showAssignDD)} className="rounded-lg border border-border/50 px-2 py-1.5 text-[11px] font-medium transition hover:bg-muted">
+                  <button onClick={() => setShowAssignDD(!showAssignDD)} className="cursor-pointer rounded-lg border border-border/40 px-2 py-1.5 text-[11px] font-medium transition-colors duration-150 hover:bg-muted/40">
                     <UserCheck className="mr-1 inline h-3 w-3" /><span className="hidden sm:inline">{selected?.assignedAgent?.split(' ')[0] ?? 'Assign'}</span><ChevronDown className="ml-0.5 inline h-3 w-3" />
                   </button>
                   {showAssignDD && (
-                    <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border border-border/50 bg-popover p-1 shadow-xl">
-                      <button onClick={() => handleAssignTo(null)} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] hover:bg-muted"><UserX className="h-3.5 w-3.5 text-muted-foreground" />Unassign</button>
-                      <div className="my-1 border-t border-border/50" />
+                    <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border border-border/40 bg-popover p-1" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                      <button onClick={() => handleAssignTo(null)} className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] hover:bg-muted/40 transition-colors duration-150"><UserX className="h-3.5 w-3.5 text-muted-foreground" />Unassign</button>
+                      <div className="my-1" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }} />
                       {operators.map((op) => (
-                        <button key={op.id} onClick={() => handleAssignTo(op.name)} className={cn('flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] hover:bg-muted', selected?.assignedAgent === op.name && 'bg-primary/10 text-primary')}>
+                        <button key={op.id} onClick={() => handleAssignTo(op.name)} className={cn('flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-[11px] hover:bg-muted/40 transition-colors duration-150', selected?.assignedAgent === op.name && 'bg-primary/10 text-primary')}>
                           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[8px] font-bold">{initials(op.name)}</div>
                           <span className="flex-1">{op.name}</span>
                           <span className={cn('h-1.5 w-1.5 rounded-full', op.status === 'online' ? 'bg-green-500' : 'bg-gray-300')} />
@@ -491,11 +491,11 @@ export default function ConversationsPage() {
                     </div>
                   )}
                 </div>
-                {selected?.status === 'open' && <button onClick={handleEscalate} className="rounded-lg p-1.5 text-amber-500 transition hover:bg-amber-50 dark:hover:bg-amber-900/20" title="Escalate"><AlertTriangle className="h-3.5 w-3.5" /></button>}
+                {selected?.status === 'open' && <button onClick={handleEscalate} className="cursor-pointer rounded-lg p-1.5 text-amber-500 transition-colors duration-150 hover:bg-amber-50 dark:hover:bg-amber-500/10" title="Escalate"><AlertTriangle className="h-3.5 w-3.5" /></button>}
                 {selected?.status === 'resolved' ? (
-                  <button onClick={handleReopen} className="rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-amber-600 transition hover:bg-amber-50 dark:hover:bg-amber-900/20">Reopen</button>
+                  <button onClick={handleReopen} className="cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-amber-600 transition-colors duration-150 hover:bg-amber-50 dark:hover:bg-amber-500/10">Reopen</button>
                 ) : (
-                  <button onClick={handleResolve} className="rounded-lg bg-green-50 dark:bg-green-900/20 px-2.5 py-1.5 text-[11px] font-medium text-green-700 dark:text-green-300 transition hover:bg-green-100 dark:hover:bg-green-900/30"><CheckCircle2 className="mr-1 inline h-3 w-3" />Resolve</button>
+                  <button onClick={handleResolve} className="cursor-pointer rounded-lg bg-green-50 dark:bg-green-500/10 px-2.5 py-1.5 text-[11px] font-medium text-green-700 dark:text-green-300 transition-colors duration-150 hover:bg-green-100 dark:hover:bg-green-500/15"><CheckCircle2 className="mr-1 inline h-3 w-3" />Resolve</button>
                 )}
               </div>
             </div>
@@ -504,7 +504,7 @@ export default function ConversationsPage() {
             <div className="flex flex-1 overflow-hidden">
               {/* Messages */}
               <div className="flex flex-1 flex-col">
-                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
                   {msgsLoading ? (
                     <div className="flex items-center justify-center py-16"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
                   ) : messages.length === 0 ? (
@@ -520,17 +520,17 @@ export default function ConversationsPage() {
                         return (
                           <div key={msg.id}>
                             {showDate && (
-                              <div className="flex items-center gap-3 py-2"><div className="h-px flex-1 bg-border/50" /><span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{new Date(msg.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span><div className="h-px flex-1 bg-border/50" /></div>
+                              <div className="flex items-center gap-3 py-2"><div className="h-px flex-1 bg-border/30" /><span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{new Date(msg.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span><div className="h-px flex-1 bg-border/30" /></div>
                             )}
                             <div className={cn('flex gap-2', isCust ? 'justify-start' : 'justify-end', !grouped && 'mt-3')}>
                               {isCust && <div className={cn('mt-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[9px] font-bold', grouped && 'invisible')}>{initials(msg.senderName ?? 'C')}</div>}
                               <div className={cn('max-w-[70%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed',
-                                isCust ? 'bg-muted rounded-bl-md' : isAi ? 'bg-cyan-50/80 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100 rounded-br-md' : 'bg-primary text-primary-foreground rounded-br-md')}>
+                                isCust ? 'bg-muted rounded-bl-md' : isAi ? 'bg-cyan-50/80 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-100 rounded-br-md' : 'bg-primary text-primary-foreground rounded-br-md')}>
                                 {!isCust && !grouped && <p className="mb-0.5 text-[9px] font-semibold opacity-60 flex items-center gap-1">{isAi && <Bot className="h-2.5 w-2.5" />}{isAi ? 'AI' : msg.senderName}</p>}
                                 <p className="whitespace-pre-wrap">{msg.body}</p>
                                 <p className={cn('mt-1 text-[9px] opacity-40', isCust ? 'text-left' : 'text-right')}>{formatTime(msg.createdAt)}</p>
                               </div>
-                              {!isCust && <div className={cn('mt-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold', isAi ? 'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300' : 'bg-primary/15 text-primary', grouped && 'invisible')}>{isAi ? <Bot className="h-3 w-3" /> : initials(msg.senderName ?? 'A')}</div>}
+                              {!isCust && <div className={cn('mt-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold', isAi ? 'bg-cyan-100 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300' : 'bg-primary/15 text-primary', grouped && 'invisible')}>{isAi ? <Bot className="h-3 w-3" /> : initials(msg.senderName ?? 'A')}</div>}
                             </div>
                           </div>
                         );
@@ -557,15 +557,15 @@ export default function ConversationsPage() {
 
                 {/* AI Suggestions - click to INSERT into input, not auto-send */}
                 {selected?.status !== 'resolved' && suggestions.length > 0 && (
-                  <div className="border-t border-border/30 bg-muted/20 px-4 py-2">
-                    <div className="flex items-center gap-2 mb-1.5">
+                  <div className="bg-muted/20 px-5 py-3" style={{ borderTop: '1px solid hsl(var(--border) / 0.3)' }}>
+                    <div className="flex items-center gap-2 mb-2">
                       <Sparkles className="h-3 w-3 text-purple-500" />
-                      <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400">Suggestions</span>
-                      <button onClick={() => selectedId && fetchSuggestions(selectedId)} className="ml-auto text-muted-foreground hover:text-foreground">{sugLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}</button>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">Suggestions</span>
+                      <button onClick={() => selectedId && fetchSuggestions(selectedId)} className="ml-auto cursor-pointer text-muted-foreground hover:text-foreground transition-colors duration-150">{sugLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}</button>
                     </div>
-                    <div className="flex gap-1.5 flex-wrap">
+                    <div className="flex gap-2 flex-wrap">
                       {suggestions.map((s, i) => (
-                        <button key={i} onClick={() => setDraft(s)} className="rounded-lg border border-purple-200/50 dark:border-purple-800/50 bg-card px-2.5 py-1.5 text-[11px] text-foreground hover:bg-purple-50 dark:hover:bg-purple-900/20 transition max-w-[240px] text-left truncate">{s}</button>
+                        <button key={i} onClick={() => setDraft(s)} className="cursor-pointer rounded-lg border border-purple-200/50 dark:border-purple-500/20 bg-card px-2.5 py-1.5 text-[11px] text-foreground hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors duration-150 max-w-[240px] text-left truncate">{s}</button>
                       ))}
                     </div>
                   </div>
@@ -573,15 +573,15 @@ export default function ConversationsPage() {
 
                 {/* Templates */}
                 {showTemplates && selected?.status !== 'resolved' && (
-                  <div className="border-t border-border/30 bg-card px-4 py-2.5 max-h-40 overflow-y-auto">
-                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Saved Replies</p>
+                  <div className="bg-card px-5 py-3 max-h-40 overflow-y-auto" style={{ borderTop: '1px solid hsl(var(--border) / 0.3)' }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Saved Replies</p>
                     {Object.entries(templatesByCategory).map(([cat, tpls]) => (
                       <div key={cat} className="mb-2">
                         <p className="text-[9px] uppercase tracking-wider text-muted-foreground/50 mb-1">{cat}</p>
                         {tpls.map((t) => (
-                          <button key={t.id} onClick={() => { setDraft(t.content); setShowTemplates(false); inputRef.current?.focus(); }} className="w-full rounded-lg px-2.5 py-1.5 text-left hover:bg-muted transition">
+                          <button key={t.id} onClick={() => { setDraft(t.content); setShowTemplates(false); inputRef.current?.focus(); }} className="w-full cursor-pointer rounded-lg px-2.5 py-1.5 text-left hover:bg-muted/40 transition-colors duration-150">
                             <span className="text-[11px] font-medium">{t.title}</span>
-                            {t.shortcut && <code className="ml-1.5 text-[9px] text-muted-foreground bg-muted px-1 py-0.5 rounded">{t.shortcut}</code>}
+                            {t.shortcut && <code className="ml-1.5 text-[9px] text-muted-foreground bg-muted px-1 py-0.5 rounded-md">{t.shortcut}</code>}
                           </button>
                         ))}
                       </div>
@@ -592,10 +592,10 @@ export default function ConversationsPage() {
 
                 {/* Input */}
                 {selected?.status !== 'resolved' && (
-                  <div className="border-t border-border/50 px-4 py-2.5">
+                  <div className="px-5 py-3" style={{ borderTop: '1px solid hsl(var(--border) / 0.4)' }}>
                     <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-2">
                       <button type="button" onClick={() => setShowTemplates(!showTemplates)}
-                        className={cn('rounded-lg p-2 transition', showTemplates ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted')} title="Templates">
+                        className={cn('cursor-pointer rounded-lg p-2 transition-colors duration-150', showTemplates ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/40')} title="Templates">
                         <FileText className="h-4 w-4" />
                       </button>
                       <input ref={inputRef} type="text" placeholder="Type a message..." value={draft}
@@ -610,8 +610,8 @@ export default function ConversationsPage() {
                           }
                         }}
                         disabled={sending}
-                        className="flex h-9 flex-1 rounded-lg border border-border/50 bg-background px-3 text-[13px] placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 disabled:opacity-50" />
-                      <button type="submit" disabled={!draft.trim() || sending} className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:opacity-30">
+                        className="flex h-9 flex-1 rounded-lg border border-border/40 bg-background px-3 text-[13px] placeholder:text-muted-foreground/50 focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 disabled:opacity-50 transition-colors duration-150" />
+                      <button type="submit" disabled={!draft.trim() || sending} className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-primary text-primary-foreground transition-colors duration-150 hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed">
                         {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                       </button>
                     </form>
@@ -621,10 +621,10 @@ export default function ConversationsPage() {
 
               {/* ═══ RIGHT: Customer Details ═══ */}
               {selected && (
-                <div className="hidden w-[280px] shrink-0 border-l border-border/50 lg:flex lg:flex-col overflow-y-auto">
+                <div className="hidden w-[280px] shrink-0 lg:flex lg:flex-col overflow-y-auto" style={{ borderLeft: '1px solid hsl(var(--border) / 0.4)' }}>
 
                   {/* Customer info */}
-                  <div className="p-4 border-b border-border/50 space-y-3">
+                  <div className="p-5 space-y-4" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }}>
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-[12px] font-bold text-primary">{initials(selected.customerName)}</div>
                       <div className="min-w-0">
@@ -632,19 +632,19 @@ export default function ConversationsPage() {
                         {selected.customerEmail && <p className="text-[11px] text-muted-foreground truncate">{selected.customerEmail}</p>}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[11px]">
-                      <div><p className="text-muted-foreground/70">Channel</p><p className="font-medium capitalize">{selected.channel?.replace('_', ' ')}</p></div>
-                      <div><p className="text-muted-foreground/70">Messages</p><p className="font-medium">{selected.messageCount}</p></div>
-                      <div><p className="text-muted-foreground/70">Created</p><p className="font-medium">{new Date(selected.createdAt).toLocaleDateString()}</p></div>
+                    <div className="grid grid-cols-2 gap-3 text-[11px]">
+                      <div><p className="text-muted-foreground/70 text-[10px]">Channel</p><p className="font-medium capitalize">{selected.channel?.replace('_', ' ')}</p></div>
+                      <div><p className="text-muted-foreground/70 text-[10px]">Messages</p><p className="font-medium">{selected.messageCount}</p></div>
+                      <div><p className="text-muted-foreground/70 text-[10px]">Created</p><p className="font-medium">{new Date(selected.createdAt).toLocaleDateString()}</p></div>
                       <div>
-                        <p className="text-muted-foreground/70">Priority</p>
+                        <p className="text-muted-foreground/70 text-[10px]">Priority</p>
                         <div className="flex gap-0.5 mt-0.5">
                           {(['low', 'normal', 'high'] as const).map((p) => (
                             <button key={p} onClick={() => handleSetPriority(p)}
-                              className={cn('rounded px-1.5 py-0.5 text-[9px] font-medium capitalize transition',
+                              className={cn('cursor-pointer rounded-full px-2 py-0.5 text-[9px] font-medium capitalize transition-colors duration-150',
                                 selected.priority === p
-                                  ? p === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/40' : p === 'low' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40' : 'bg-muted text-foreground'
-                                  : 'text-muted-foreground hover:bg-muted')}>
+                                  ? p === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-500/10' : p === 'low' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/10' : 'bg-muted text-foreground'
+                                  : 'text-muted-foreground hover:bg-muted/40')}>
                               {p}
                             </button>
                           ))}
@@ -655,9 +655,9 @@ export default function ConversationsPage() {
 
                   {/* Visitor info */}
                   {selected.metadata && Object.keys(selected.metadata).length > 0 && (
-                    <div className="px-4 py-3 border-b border-border/50">
-                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2 flex items-center gap-1"><Globe className="h-3 w-3" />Visitor</p>
-                      <div className="space-y-1.5 text-[11px]">
+                    <div className="px-5 py-4" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }}>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1"><Globe className="h-3 w-3" />Visitor</p>
+                      <div className="space-y-2 text-[11px]">
                         {selected.metadata.browser && <div className="flex justify-between"><span className="text-muted-foreground">Browser</span><span className="font-medium">{selected.metadata.browser}</span></div>}
                         {selected.metadata.os && <div className="flex justify-between"><span className="text-muted-foreground">OS</span><span className="font-medium">{selected.metadata.os}</span></div>}
                         {selected.metadata.device && <div className="flex justify-between"><span className="text-muted-foreground">Device</span><span className="font-medium capitalize">{selected.metadata.device}</span></div>}
@@ -669,27 +669,27 @@ export default function ConversationsPage() {
 
                   {/* Analytics */}
                   {miniStats && (
-                    <div className="px-4 py-3 border-b border-border/50">
-                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2 flex items-center gap-1"><BarChart3 className="h-3 w-3" />Analytics</p>
-                      <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-                        <div><p className="text-lg font-bold">{miniStats.total}</p><p className="text-muted-foreground/70">Msgs</p></div>
-                        <div><p className="text-lg font-bold text-cyan-600 dark:text-cyan-400">{miniStats.aiPct}%</p><p className="text-muted-foreground/70">AI</p></div>
-                        <div><p className="text-lg font-bold text-primary">{miniStats.humanPct}%</p><p className="text-muted-foreground/70">Human</p></div>
+                    <div className="px-5 py-4" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }}>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1"><BarChart3 className="h-3 w-3" />Analytics</p>
+                      <div className="grid grid-cols-3 gap-3 text-center text-[11px]">
+                        <div><p className="text-lg font-bold">{miniStats.total}</p><p className="text-muted-foreground/70 text-[10px]">Msgs</p></div>
+                        <div><p className="text-lg font-bold text-cyan-600 dark:text-cyan-400">{miniStats.aiPct}%</p><p className="text-muted-foreground/70 text-[10px]">AI</p></div>
+                        <div><p className="text-lg font-bold text-primary">{miniStats.humanPct}%</p><p className="text-muted-foreground/70 text-[10px]">Human</p></div>
                       </div>
-                      {miniStats.aiPct > 0 && <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden flex"><div className="bg-cyan-500 transition-all" style={{width:`${miniStats.aiPct}%`}} /><div className="bg-primary transition-all" style={{width:`${miniStats.humanPct}%`}} /></div>}
+                      {miniStats.aiPct > 0 && <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden flex"><div className="bg-cyan-500 transition-all duration-200" style={{width:`${miniStats.aiPct}%`}} /><div className="bg-primary transition-all duration-200" style={{width:`${miniStats.humanPct}%`}} /></div>}
                     </div>
                   )}
 
                   {/* Tags */}
-                  <div className="px-4 py-3 border-b border-border/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider flex items-center gap-1"><Tag className="h-3 w-3" />Tags</p>
-                      <button onClick={() => setShowTagInput(!showTagInput)} className="rounded p-0.5 hover:bg-muted"><Plus className="h-3 w-3 text-muted-foreground" /></button>
+                  <div className="px-5 py-4" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Tag className="h-3 w-3" />Tags</p>
+                      <button onClick={() => setShowTagInput(!showTagInput)} className="cursor-pointer rounded-lg p-0.5 hover:bg-muted/40 transition-colors duration-150"><Plus className="h-3 w-3 text-muted-foreground" /></button>
                     </div>
-                    <div className="flex gap-1 flex-wrap">
+                    <div className="flex gap-1.5 flex-wrap">
                       {(selected.tags ?? []).map((tag) => (
-                        <span key={tag} className="inline-flex items-center gap-0.5 rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium">
-                          {tag}<button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive"><X className="h-2.5 w-2.5" /></button>
+                        <span key={tag} className="inline-flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium">
+                          {tag}<button onClick={() => handleRemoveTag(tag)} className="cursor-pointer hover:text-destructive transition-colors duration-150"><X className="h-2.5 w-2.5" /></button>
                         </span>
                       ))}
                       {(selected.tags ?? []).length === 0 && !showTagInput && <p className="text-[10px] text-muted-foreground">No tags</p>}
@@ -697,10 +697,10 @@ export default function ConversationsPage() {
                     {showTagInput && (
                       <div className="mt-2 space-y-1.5">
                         <input value={newTag} onChange={(e) => setNewTag(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(newTag); } }}
-                          placeholder="Add tag..." className="h-7 w-full rounded-md border border-border/50 bg-background px-2 text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30" />
-                        <div className="flex gap-1 flex-wrap">
+                          placeholder="Add tag..." className="h-7 w-full rounded-lg border border-border/40 bg-background px-2 text-[11px] focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-colors duration-150" />
+                        <div className="flex gap-1.5 flex-wrap">
                           {TAG_PRESETS.filter((t) => !(selected.tags ?? []).includes(t)).slice(0, 5).map((t) => (
-                            <button key={t} onClick={() => handleAddTag(t)} className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground hover:text-foreground transition">+{t}</button>
+                            <button key={t} onClick={() => handleAddTag(t)} className="cursor-pointer rounded-full bg-muted px-2 py-0.5 text-[9px] text-muted-foreground hover:text-foreground transition-colors duration-150">+{t}</button>
                           ))}
                         </div>
                       </div>
@@ -708,18 +708,18 @@ export default function ConversationsPage() {
                   </div>
 
                   {/* Notes */}
-                  <div className="px-4 py-3 flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider flex items-center gap-1"><StickyNote className="h-3 w-3" />Notes</p>
-                      {!editingNotes && <button onClick={() => { setEditingNotes(true); setNoteDraft(selected.internalNotes ?? ''); }} className="text-[10px] text-primary hover:underline">Edit</button>}
+                  <div className="px-5 py-4 flex-1">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><StickyNote className="h-3 w-3" />Notes</p>
+                      {!editingNotes && <button onClick={() => { setEditingNotes(true); setNoteDraft(selected.internalNotes ?? ''); }} className="cursor-pointer text-[10px] text-primary hover:underline transition-colors duration-150">Edit</button>}
                     </div>
                     {editingNotes ? (
                       <div className="space-y-1.5">
                         <textarea value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} rows={4}
-                          className="w-full rounded-lg border border-border/50 bg-background px-2.5 py-2 text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/30 resize-none" placeholder="Internal notes..." />
-                        <div className="flex gap-1.5">
-                          <button onClick={handleSaveNotes} className="rounded-lg bg-primary px-3 py-1 text-[11px] font-medium text-primary-foreground transition hover:bg-primary/90">Save</button>
-                          <button onClick={() => setEditingNotes(false)} className="rounded-lg px-3 py-1 text-[11px] text-muted-foreground transition hover:bg-muted">Cancel</button>
+                          className="w-full rounded-lg border border-border/40 bg-background px-2.5 py-2 text-[11px] focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 resize-none transition-colors duration-150" placeholder="Internal notes..." />
+                        <div className="flex gap-2">
+                          <button onClick={handleSaveNotes} className="cursor-pointer rounded-lg bg-primary px-3 py-1 text-[11px] font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary/90">Save</button>
+                          <button onClick={() => setEditingNotes(false)} className="cursor-pointer rounded-lg px-3 py-1 text-[11px] text-muted-foreground transition-colors duration-150 hover:bg-muted/40">Cancel</button>
                         </div>
                       </div>
                     ) : (

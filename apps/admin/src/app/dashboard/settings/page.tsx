@@ -281,7 +281,7 @@ export default function SettingsPage() {
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* Toast */}
       {toast && (
         <Toast
@@ -306,10 +306,10 @@ export default function SettingsPage() {
             <button
               key={section.id}
               onClick={() => setActiveSection(section.id)}
-              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-out ${
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer transition-all duration-200 ease-out ${
                 activeSection === section.id
                   ? 'bg-primary/10 text-primary shadow-sm'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-0.5'
+                  : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground hover:translate-x-0.5'
               }`}
             >
               <section.icon className="h-4 w-4" />
@@ -322,7 +322,7 @@ export default function SettingsPage() {
         <div className="lg:col-span-3 space-y-6">
           {/* ── GENERAL ───────────────────────────────────────────────────── */}
           {activeSection === 'general' && (
-            <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <h3 className="text-lg font-semibold">General Settings</h3>
               <p className="text-sm text-muted-foreground">
                 Configure your platform-wide settings
@@ -402,7 +402,7 @@ export default function SettingsPage() {
 
           {/* ── NOTIFICATIONS ─────────────────────────────────────────────── */}
           {activeSection === 'notifications' && (
-            <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <h3 className="text-lg font-semibold">Notification Settings</h3>
               <p className="text-sm text-muted-foreground">
                 Configure how you receive notifications
@@ -412,7 +412,7 @@ export default function SettingsPage() {
                 {notificationLabels.map(({ key, label }) => (
                   <div
                     key={key}
-                    className="flex items-center justify-between rounded-lg border px-4 py-3 transition-all duration-200 hover:bg-muted/30 hover:shadow-sm"
+                    className="flex items-center justify-between rounded-xl border border-border/40 px-4 py-3 transition-all duration-200 hover:bg-muted/30 hover:shadow-sm"
                   >
                     <span className="text-sm">{label}</span>
                     <Toggle
@@ -438,7 +438,7 @@ export default function SettingsPage() {
           {/* ── SECURITY ──────────────────────────────────────────────────── */}
           {activeSection === 'security' && (
             <>
-              <div className="rounded-lg border bg-card p-6 shadow-sm">
+              <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
                 <h3 className="text-lg font-semibold">Security Settings</h3>
                 <p className="text-sm text-muted-foreground">
                   Manage authentication and security options
@@ -464,7 +464,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between rounded-lg border px-4 py-3 max-w-md transition-all duration-200 hover:bg-muted/30 hover:shadow-sm">
+                  <div className="flex items-center justify-between rounded-xl border border-border/40 px-4 py-3 max-w-md transition-all duration-200 hover:bg-muted/30 hover:shadow-sm">
                     <span className="text-sm">Require 2FA for all users</span>
                     <Toggle
                       enabled={security.require2fa}
@@ -477,7 +477,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between rounded-lg border px-4 py-3 max-w-md transition-all duration-200 hover:bg-muted/30 hover:shadow-sm">
+                  <div className="flex items-center justify-between rounded-xl border border-border/40 px-4 py-3 max-w-md transition-all duration-200 hover:bg-muted/30 hover:shadow-sm">
                     <span className="text-sm">Enable SSO</span>
                     <Toggle
                       enabled={security.enableSso}
@@ -496,7 +496,7 @@ export default function SettingsPage() {
 
               {/* Password change */}
               {profile?.authProvider === 'local' && (
-                <div className="rounded-lg border bg-card p-6 shadow-sm">
+                <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
                   <div className="flex items-center gap-2">
                     <Lock className="h-5 w-5 text-muted-foreground" />
                     <h3 className="text-lg font-semibold">Change Password</h3>
@@ -607,7 +607,7 @@ export default function SettingsPage() {
             <div className="space-y-6">
               {/* Live preview */}
               <div
-                className="rounded-lg border bg-card p-6 shadow-sm transition-all duration-500"
+                className="rounded-xl border border-border/40 bg-card p-6 transition-all duration-500"
                 style={{ boxShadow: `0 0 40px ${primaryHex}15` }}
               >
                 <div className="flex flex-col items-center gap-4">
@@ -625,7 +625,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Settings card */}
-              <div className="rounded-lg border bg-card p-6 shadow-sm">
+              <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
                 <h3 className="text-lg font-semibold">Appearance Settings</h3>
                 <p className="text-sm text-muted-foreground">
                   Customize the look and feel of your admin panel

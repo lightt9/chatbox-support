@@ -22,6 +22,7 @@ async function bootstrap() {
   const port = process.env.PORT || process.env.API_PORT || 3001;
   console.log('[boot] port=' + port + ' node_env=' + process.env.NODE_ENV);
   console.log('[boot] db set=' + !!process.env.DATABASE_URL);
+  console.log('[boot] ws disabled=' + (process.env.DISABLE_WEBSOCKET === 'true'));
 
   console.log('[boot] creating app...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -41,11 +42,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  try {
+  if (process.env.DISABLE_WEBSOCKET !== 'true') {
     app.useWebSocketAdapter(new IoAdapter(app));
     console.log('[boot] WebSocket adapter set');
-  } catch (err) {
-    console.error('[boot] WebSocket adapter failed, continuing without it:', err);
   }
 
   app.useGlobalPipes(
@@ -59,9 +58,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  console.log('[boot] calling init...');
-  await app.init();
-  console.log('[boot] init done, calling listen on port ' + port);
+  console.log('[boot] calling listen on port ' + port);
   await app.listen(Number(port), '0.0.0.0');
   console.log('[boot] READY on port ' + port);
 }

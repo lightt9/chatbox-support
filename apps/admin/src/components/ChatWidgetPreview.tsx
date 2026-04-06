@@ -68,20 +68,21 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
       {/* ── Chat Window ──────────────────────────────────────────────── */}
       {open && (
         <div
-          className="absolute top-0 flex flex-col overflow-hidden shadow-2xl transition-all duration-300"
+          className="absolute top-0 flex flex-col overflow-hidden transition-all duration-300"
           style={{
             width: sz.w,
             height: sz.h,
             borderRadius: radius,
             [isRight ? 'right' : 'left']: 8,
             background: config.chatBackground,
+            boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25), 0 0 0 1px rgb(0 0 0 / 0.05)',
           }}
         >
-          {/* Header */}
+          {/* Header — with subtle gradient overlay */}
           <div
             className="flex items-center justify-between px-5 py-4 shrink-0"
             style={{
-              background: config.headerColor,
+              background: `linear-gradient(135deg, ${config.headerColor}, ${config.headerColor}ee)`,
               borderRadius: `${radius}px ${radius}px 0 0`,
             }}
           >
@@ -95,7 +96,7 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
               ) : (
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold"
-                  style={{ background: 'rgba(255,255,255,0.2)', color: headerText }}
+                  style={{ background: 'rgba(255,255,255,0.15)', color: headerText }}
                 >
                   {config.companyName.charAt(0)}
                 </div>
@@ -104,25 +105,29 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
                 <p className="text-sm font-semibold" style={{ color: headerText }}>
                   {config.companyName}
                 </p>
-                <p className="text-xs" style={{ color: headerText, opacity: 0.7 }}>
-                  Online
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                  <p className="text-[11px]" style={{ color: headerText, opacity: 0.7 }}>
+                    Online
+                  </p>
+                </div>
               </div>
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="rounded-full p-1.5 transition-colors hover:bg-white/10"
+              className="cursor-pointer rounded-full p-1.5 transition-colors hover:bg-white/10"
             >
               <X className="h-4 w-4" style={{ color: headerText }} />
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          <div className="flex-1 overflow-y-auto px-4 py-5 space-y-3">
             {messages.map((m, i) => {
               const isUser = m.from === 'user';
               return (
-                <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                  style={{ animation: `slideUp 0.3s ease-out ${i * 0.1}s both` }}>
                   <div
                     className="max-w-[80%] px-3.5 py-2.5 text-[13px] leading-relaxed"
                     style={{
@@ -131,6 +136,7 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
                       borderRadius: isUser
                         ? `${radius * 0.75}px ${radius * 0.75}px 4px ${radius * 0.75}px`
                         : `${radius * 0.75}px ${radius * 0.75}px ${radius * 0.75}px 4px`,
+                      boxShadow: '0 1px 2px rgb(0 0 0 / 0.06)',
                     }}
                   >
                     {m.text}
@@ -142,8 +148,11 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
 
           {/* Input */}
           <div
-            className="flex items-center gap-2 border-t px-4 py-3 shrink-0"
-            style={{ background: config.chatBackground, borderColor: '#e5e7eb' }}
+            className="flex items-center gap-2 px-4 py-3 shrink-0"
+            style={{
+              background: config.chatBackground,
+              borderTop: '1px solid rgba(0,0,0,0.06)',
+            }}
           >
             <input
               type="text"
@@ -152,8 +161,11 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
               readOnly
             />
             <button
-              className="flex h-8 w-8 items-center justify-center rounded-full transition-transform hover:scale-105"
-              style={{ background: config.headerColor }}
+              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full transition-all duration-200 hover:scale-105 hover:brightness-110 active:scale-95"
+              style={{
+                background: config.headerColor,
+                boxShadow: `0 2px 8px ${config.headerColor}40`,
+              }}
             >
               <Send className="h-3.5 w-3.5" style={{ color: headerText }} />
             </button>
@@ -164,13 +176,14 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
       {/* ── Bubble Button ────────────────────────────────────────────── */}
       <button
         onClick={() => setOpen(!open)}
-        className="absolute bottom-0 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 active:scale-95"
+        className="absolute bottom-0 flex cursor-pointer items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95"
         style={{
           width: sz.bubble,
           height: sz.bubble,
           borderRadius: '50%',
-          background: config.headerColor,
+          background: `linear-gradient(135deg, ${config.headerColor}, ${config.headerColor}dd)`,
           [isRight ? 'right' : 'left']: 8,
+          boxShadow: `0 4px 14px ${config.headerColor}40`,
         }}
       >
         {open ? (
@@ -179,13 +192,13 @@ export function ChatWidgetPreview({ config }: { config: WidgetConfig }) {
           <MessageCircle className="h-6 w-6" style={{ color: headerText }} />
         )}
         {!open && config.notificationBadge && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
             1
           </span>
         )}
         {!open && config.pulseAnimation && (
           <span
-            className="absolute inset-0 animate-ping rounded-full opacity-30"
+            className="absolute inset-0 animate-ping rounded-full opacity-20"
             style={{ background: config.headerColor }}
           />
         )}

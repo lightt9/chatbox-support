@@ -229,7 +229,7 @@ export default function CompaniesPage() {
                   </div>
                   <div className="rounded-xl border border-border/50 overflow-hidden divide-y divide-border/50">
                     {users.map((u) => (
-                      <div key={u.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition">
+                      <div key={u.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors duration-150">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{u.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}</div>
                         <div className="min-w-0 flex-1"><p className="text-[12px] font-medium truncate">{u.name}</p><p className="text-[10px] text-muted-foreground truncate">{u.email}</p></div>
                         <select value={u.role} onChange={(e) => handleChangeRole(u.id, e.target.value)} className="rounded-md border border-border/50 bg-background px-2 py-1 text-[10px] font-medium focus:outline-none focus:ring-1 focus:ring-primary/30">
@@ -253,8 +253,8 @@ export default function CompaniesPage() {
       {/* ── Modals ── */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl ring-1 ring-border/50">
-            <h2 className="text-[15px] font-bold mb-4">Create Company</h2>
+          <div className="w-full max-w-md rounded-xl bg-card p-6 animate-scale-in ring-1 ring-border/50" style={{ boxShadow: 'var(--shadow-xl)' }}>
+            <h2 className="text-[15px] font-bold mb-5">Create Company</h2>
             <div className="space-y-3">
               <div><label className="block text-[11px] font-semibold text-muted-foreground mb-1">Name *</label><input type="text" value={createName} onChange={(e) => { setCreateName(e.target.value); setCreateSlug(e.target.value.toLowerCase().replace(/\s+/g, '-')); }} className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/30" placeholder="Acme Corp" /></div>
               <div><label className="block text-[11px] font-semibold text-muted-foreground mb-1">Slug</label><input type="text" value={createSlug} onChange={(e) => setCreateSlug(e.target.value)} className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-[13px] font-mono focus:outline-none focus:ring-1 focus:ring-primary/30" placeholder="acme-corp" /></div>
@@ -269,12 +269,12 @@ export default function CompaniesPage() {
 
       {showAddUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl ring-1 ring-border/50">
+          <div className="w-full max-w-md rounded-xl bg-card p-6 animate-scale-in ring-1 ring-border/50" style={{ boxShadow: 'var(--shadow-xl)' }}>
             {generatedPassword ? (
               <>
                 <h2 className="text-[15px] font-bold mb-2">User Created</h2>
                 <p className="text-[12px] text-muted-foreground mb-3">A password was auto-generated. Share it with the user so they can log in.</p>
-                <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 mb-4">
+                <div className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-800 p-3 mb-4">
                   <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 mb-1">Generated Password</p>
                   <p className="text-[14px] font-mono font-bold text-amber-900 dark:text-amber-100 select-all">{generatedPassword}</p>
                 </div>
@@ -301,7 +301,7 @@ export default function CompaniesPage() {
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-2xl ring-1 ring-border/50">
+          <div className="w-full max-w-sm rounded-xl bg-card p-6 animate-scale-in ring-1 ring-border/50" style={{ boxShadow: 'var(--shadow-xl)' }}>
             <div className="flex items-center gap-3 mb-3"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10"><AlertTriangle className="h-5 w-5 text-destructive" /></div><div><h2 className="text-[14px] font-bold">Delete Company</h2><p className="text-[11px] text-muted-foreground">This action is permanent.</p></div></div>
             <p className="text-[12px] text-muted-foreground mb-4">All users, conversations, messages, and settings will be permanently deleted.</p>
             <div className="flex justify-end gap-2">

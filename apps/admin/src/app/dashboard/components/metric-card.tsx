@@ -17,14 +17,15 @@ interface MetricCardProps {
 
 function Skeleton() {
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm animate-pulse">
+    <div className="rounded-xl border border-border/40 bg-card p-6 animate-pulse"
+      style={{ boxShadow: 'var(--shadow-sm)' }}>
       <div className="flex items-center justify-between">
-        <div className="h-4 w-28 rounded bg-muted" />
-        <div className="h-10 w-10 rounded-lg bg-muted" />
+        <div className="h-4 w-28 rounded-md bg-muted" />
+        <div className="h-10 w-10 rounded-xl bg-muted" />
       </div>
-      <div className="mt-3">
-        <div className="h-8 w-20 rounded bg-muted" />
-        <div className="mt-2 h-4 w-32 rounded bg-muted" />
+      <div className="mt-4">
+        <div className="h-8 w-20 rounded-md bg-muted" />
+        <div className="mt-2.5 h-4 w-32 rounded-md bg-muted" />
       </div>
     </div>
   );
@@ -49,39 +50,35 @@ export function MetricCard({
   const card = (
     <div
       className={cn(
-        'rounded-lg border bg-card p-6 shadow-sm transition-all duration-200',
-        href && 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md',
+        'rounded-xl border border-border/40 bg-card p-6 transition-all duration-200',
+        href && 'cursor-pointer hover:-translate-y-0.5',
       )}
+      style={{ boxShadow: 'var(--shadow-sm)' }}
+      onMouseEnter={(e) => { if (href) e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+      onMouseLeave={(e) => { if (href) e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <div
-          className={cn(
-            'flex h-10 w-10 items-center justify-center rounded-lg',
-            bgColor,
-          )}
-        >
+        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', bgColor)}>
           <Icon className={cn('h-5 w-5', color)} />
         </div>
       </div>
-      <div className="mt-3">
+      <div className="mt-4">
         <p className="text-3xl font-bold tracking-tight">{value}</p>
-        <div className="mt-1 flex items-center gap-1">
-          {isPositive ? (
-            <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-          ) : (
-            <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
-          )}
-          <span
-            className={cn(
-              'text-sm font-medium',
-              isPositive
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400',
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <div className={cn(
+            'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+            isPositive
+              ? 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+              : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400',
+          )}>
+            {isPositive ? (
+              <TrendingUp className="h-3 w-3" />
+            ) : (
+              <TrendingDown className="h-3 w-3" />
             )}
-          >
             {changeStr}
-          </span>
+          </div>
           <span className="text-xs text-muted-foreground">vs prev</span>
         </div>
       </div>

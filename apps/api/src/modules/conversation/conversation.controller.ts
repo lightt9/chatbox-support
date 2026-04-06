@@ -15,7 +15,7 @@ import { ConversationService } from './conversation.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AiService, ChatMessage } from '../ai/ai.service';
 import { DB_POOL } from '../../config/database.module';
-import { Inject } from '@nestjs/common';
+import { Inject, Optional } from '@nestjs/common';
 import { ChatGateway } from '../chat/chat.gateway';
 
 @Controller('api/v1/conversations')
@@ -24,7 +24,7 @@ export class ConversationController {
   constructor(
     private readonly conversationService: ConversationService,
     private readonly aiService: AiService,
-    private readonly chatGateway: ChatGateway,
+    @Optional() private readonly chatGateway: ChatGateway,
     @Inject(DB_POOL) private readonly pool: any,
   ) {}
 
@@ -91,7 +91,7 @@ export class ConversationController {
     if (!msg) throw new NotFoundException('Conversation not found');
 
     // Emit real-time message to widget and dashboard
-    this.chatGateway.emitNewMessage(companyId, id, msg);
+    this.chatGateway?.emitNewMessage(companyId, id, msg);
 
     return msg;
   }
@@ -109,8 +109,8 @@ export class ConversationController {
 
     // Notify widget that an agent joined
     if (agent) {
-      this.chatGateway.emitAgentJoined(id, agent);
-      this.chatGateway.emitConversationUpdate(companyId, id, {
+      this.chatGateway?.emitAgentJoined(id, agent);
+      this.chatGateway?.emitConversationUpdate(companyId, id, {
         event: 'assigned',
         assignedAgent: agent,
       });

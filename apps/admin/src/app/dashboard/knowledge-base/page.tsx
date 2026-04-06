@@ -72,7 +72,7 @@ const recentEntries = [
 
 export default function KnowledgeBasePage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -81,7 +81,7 @@ export default function KnowledgeBasePage() {
             Manage articles and training data for AI agents
           </p>
         </div>
-        <button className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer transition-colors duration-150">
           <Plus className="h-4 w-4" />
           New Article
         </button>
@@ -89,15 +89,15 @@ export default function KnowledgeBasePage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Category tree */}
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
+        <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
+          <div className="mb-5 flex items-center gap-2">
             <FolderTree className="h-5 w-5 text-muted-foreground" />
-            <h3 className="font-semibold">Categories</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Categories</h3>
           </div>
           <div className="space-y-2">
             {categories.map((category) => (
               <div key={category.name}>
-                <button className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-muted">
+                <button className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-muted/40 cursor-pointer transition-colors duration-150">
                   <span className="flex items-center gap-2">
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     {category.name}
@@ -110,7 +110,7 @@ export default function KnowledgeBasePage() {
                   {category.children.map((child) => (
                     <button
                       key={child}
-                      className="flex w-full items-center rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                      className="flex w-full items-center rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground cursor-pointer transition-colors duration-150"
                     >
                       {child}
                     </button>
@@ -129,17 +129,18 @@ export default function KnowledgeBasePage() {
             <input
               type="text"
               placeholder="Search articles..."
-              className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex h-10 w-full rounded-lg border border-input bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
             />
           </div>
 
           {/* Entries */}
-          <div className="rounded-lg border bg-card shadow-sm">
-            <div className="divide-y">
+          <div className="rounded-xl border border-border/40 bg-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
+            <div>
               {recentEntries.map((entry) => (
                 <div
                   key={entry.id}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-muted/30 cursor-pointer"
+                  style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}
+                  className="flex items-center justify-between px-6 py-4 hover:bg-muted/30 cursor-pointer transition-colors duration-150"
                 >
                   <div className="flex items-start gap-3">
                     <FileText className="mt-0.5 h-5 w-5 text-muted-foreground" />

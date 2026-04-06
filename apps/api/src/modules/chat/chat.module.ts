@@ -4,10 +4,18 @@ import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 import { SettingsModule } from '../settings/settings.module';
 
+const enableWs = process.env.DISABLE_WEBSOCKET !== 'true';
+
 @Module({
   imports: [SettingsModule],
   controllers: [ChatController],
-  providers: [ChatService, ChatGateway],
-  exports: [ChatService, ChatGateway],
+  providers: [
+    ChatService,
+    ...(enableWs ? [ChatGateway] : []),
+  ],
+  exports: [
+    ChatService,
+    ...(enableWs ? [ChatGateway] : []),
+  ],
 })
 export class ChatModule {}

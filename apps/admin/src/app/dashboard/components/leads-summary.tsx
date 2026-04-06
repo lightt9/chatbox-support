@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, UserPlus, TrendingUp, MessageSquare } from 'lucide-react';
+import { Users, UserPlus, TrendingUp, MessageSquare, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LeadsSummaryData {
@@ -17,13 +17,13 @@ interface LeadsSummaryProps {
 
 function SummarySkeleton() {
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
-      <div className="mb-4 h-5 w-32 rounded bg-muted animate-pulse" />
-      <div className="grid grid-cols-2 gap-4">
+    <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
+      <div className="mb-5 h-5 w-32 rounded-md bg-muted animate-pulse" />
+      <div className="grid grid-cols-2 gap-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="space-y-1">
-            <div className="h-8 w-12 rounded bg-muted animate-pulse" />
-            <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+          <div key={i} className="rounded-xl bg-muted/40 p-3.5 space-y-2">
+            <div className="h-8 w-12 rounded-md bg-muted animate-pulse" />
+            <div className="h-3 w-20 rounded-md bg-muted animate-pulse" />
           </div>
         ))}
       </div>
@@ -40,63 +40,58 @@ export function LeadsSummary({ data, loading = false }: LeadsSummaryProps) {
       value: data.totalLeads.toString(),
       icon: Users,
       color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-50 dark:bg-blue-900/30',
+      bgColor: 'bg-blue-50 dark:bg-blue-500/10',
     },
     {
       label: 'New Today',
       value: data.newLeadsToday.toString(),
       icon: UserPlus,
       color: 'text-green-600 dark:text-green-400',
-      bgColor: 'bg-green-50 dark:bg-green-900/30',
+      bgColor: 'bg-green-50 dark:bg-green-500/10',
     },
     {
       label: 'Conversion Rate',
       value: `${data.conversionRate}%`,
       icon: TrendingUp,
       color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/30',
+      bgColor: 'bg-purple-50 dark:bg-purple-500/10',
     },
     {
       label: 'From Chat',
       value: data.leadsFromChat.toString(),
       icon: MessageSquare,
       color: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+      bgColor: 'bg-amber-50 dark:bg-amber-500/10',
     },
   ];
 
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Leads</h3>
+    <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Leads</h3>
         <a
           href="/dashboard/leads"
-          className="text-sm font-medium text-primary hover:underline"
+          className="group flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
         >
-          View all
+          View all <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
         </a>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-3">
         {items.map((item) => {
           const Icon = item.icon;
           return (
             <div
               key={item.label}
-              className="rounded-lg bg-muted/40 p-3 transition-colors hover:bg-muted/60"
+              className="rounded-xl bg-muted/30 p-3.5 transition-colors hover:bg-muted/50"
             >
-              <div className="flex items-center gap-2">
-                <div
-                  className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-md',
-                    item.bgColor,
-                  )}
-                >
-                  <Icon className={cn('h-3.5 w-3.5', item.color)} />
+              <div className="flex items-center gap-2.5">
+                <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg', item.bgColor)}>
+                  <Icon className={cn('h-4 w-4', item.color)} />
                 </div>
-                <span className="text-2xl font-bold">{item.value}</span>
+                <span className="text-2xl font-bold tracking-tight">{item.value}</span>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{item.label}</p>
+              <p className="mt-1.5 text-xs font-medium text-muted-foreground">{item.label}</p>
             </div>
           );
         })}

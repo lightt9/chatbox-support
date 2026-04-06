@@ -118,7 +118,7 @@ export default function WidgetSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Header */}
@@ -134,7 +134,7 @@ export default function WidgetSettingsPage() {
       </div>
 
       {/* Embed code */}
-      <div className="rounded-lg border bg-card p-4 shadow-sm">
+      <div className="rounded-xl border border-border/40 bg-card p-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-semibold">Install on your website</p>
           <button onClick={() => { const el = document.getElementById('embed-code') as HTMLTextAreaElement; el?.select(); document.execCommand('copy'); }}
@@ -153,7 +153,7 @@ export default function WidgetSettingsPage() {
           <div className="flex flex-wrap gap-1.5">
             {SECTIONS.map((s) => (
               <button key={s.id} onClick={() => setActiveSection(s.id)}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 ${
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium cursor-pointer transition-all duration-200 ${
                   activeSection === s.id
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-muted text-muted-foreground hover:text-foreground'
@@ -165,7 +165,7 @@ export default function WidgetSettingsPage() {
 
           {/* ── BRANDING ─────────────────────────────────────────────────── */}
           {activeSection === 'branding' && (
-            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
+            <div className="rounded-xl border border-border/40 bg-card p-5 space-y-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <div><h3 className="font-semibold">Branding</h3><p className="text-xs text-muted-foreground">Your company identity in the widget</p></div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Company Name</label>
@@ -187,7 +187,7 @@ export default function WidgetSettingsPage() {
 
           {/* ── COLORS ───────────────────────────────────────────────────── */}
           {activeSection === 'colors' && (
-            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
+            <div className="rounded-xl border border-border/40 bg-card p-5 space-y-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <div>
                 <h3 className="font-semibold">Theme</h3>
                 <p className="text-xs text-muted-foreground">Pick a primary color. All other colors are auto-generated for perfect contrast and readability.</p>
@@ -196,7 +196,7 @@ export default function WidgetSettingsPage() {
                 set('headerColor', v);
                 set('userMessageColor', v);
               }} />
-              <div className="rounded-lg border border-dashed border-muted-foreground/20 bg-muted/30 px-4 py-3">
+              <div className="rounded-xl border border-dashed border-border/60 bg-muted/30 px-4 py-3">
                 <p className="text-xs text-muted-foreground">
                   The theme engine automatically generates header, button, message bubble, background, and text colors from your primary color with proper contrast ratios.
                 </p>
@@ -206,7 +206,7 @@ export default function WidgetSettingsPage() {
 
           {/* ── LAYOUT ───────────────────────────────────────────────────── */}
           {activeSection === 'layout' && (
-            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
+            <div className="rounded-xl border border-border/40 bg-card p-5 space-y-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <div><h3 className="font-semibold">Layout</h3><p className="text-xs text-muted-foreground">Position, size, and shape</p></div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Position</label>
@@ -241,9 +241,9 @@ export default function WidgetSettingsPage() {
 
           {/* ── BEHAVIOR ─────────────────────────────────────────────────── */}
           {activeSection === 'behavior' && (
-            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
+            <div className="rounded-xl border border-border/40 bg-card p-5 space-y-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <div><h3 className="font-semibold">Behavior</h3><p className="text-xs text-muted-foreground">How the widget opens and triggers</p></div>
-              <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+              <div className="flex items-center justify-between rounded-xl border border-border/40 px-4 py-3">
                 <div><p className="text-sm font-medium">Auto-open widget</p><p className="text-xs text-muted-foreground">Automatically open after a delay</p></div>
                 <Toggle enabled={config.autoOpenEnabled} onToggle={() => set('autoOpenEnabled', !config.autoOpenEnabled)} />
               </div>
@@ -260,14 +260,14 @@ export default function WidgetSettingsPage() {
 
           {/* ── EXPERIENCE ───────────────────────────────────────────────── */}
           {activeSection === 'experience' && (
-            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-4">
+            <div className="rounded-xl border border-border/40 bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <div><h3 className="font-semibold">Experience</h3><p className="text-xs text-muted-foreground">Sounds, badges, and animations</p></div>
               {([
                 { key: 'soundEnabled' as const, label: 'Message sound', desc: 'Play a sound on new messages' },
                 { key: 'notificationBadge' as const, label: 'Notification badge', desc: 'Show unread count on bubble' },
                 { key: 'pulseAnimation' as const, label: 'Pulse animation', desc: 'Pulsing ring on the bubble' },
               ]).map(({ key, label, desc }) => (
-                <div key={key} className="flex items-center justify-between rounded-lg border px-4 py-3">
+                <div key={key} className="flex items-center justify-between rounded-xl border border-border/40 px-4 py-3">
                   <div><p className="text-sm font-medium">{label}</p><p className="text-xs text-muted-foreground">{desc}</p></div>
                   <Toggle enabled={config[key]} onToggle={() => set(key, !config[key])} />
                 </div>
@@ -277,7 +277,7 @@ export default function WidgetSettingsPage() {
 
           {/* ── FEATURES ──────────────────────────────────────────────────── */}
           {activeSection === 'features' && (
-            <div className="rounded-lg border bg-card p-5 shadow-sm space-y-4">
+            <div className="rounded-xl border border-border/40 bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <div><h3 className="font-semibold">Feature Toggles</h3><p className="text-xs text-muted-foreground">Enable or disable specific widget capabilities</p></div>
               {([
                 { key: 'featureLiveTyping' as const, label: 'Live Typing Preview', desc: 'Show what user types in real-time to agents' },
@@ -289,7 +289,7 @@ export default function WidgetSettingsPage() {
                 { key: 'featureEndChat' as const, label: 'End Chat Button', desc: 'Allow visitors to close conversations' },
                 { key: 'featureAiSuggestions' as const, label: 'AI Suggestions', desc: 'Show quick-reply suggestions to agents' },
               ]).map(({ key, label, desc }) => (
-                <div key={key} className="flex items-center justify-between rounded-lg border px-4 py-3">
+                <div key={key} className="flex items-center justify-between rounded-xl border border-border/40 px-4 py-3">
                   <div><p className="text-sm font-medium">{label}</p><p className="text-xs text-muted-foreground">{desc}</p></div>
                   <Toggle enabled={config[key]} onToggle={() => set(key, !config[key])} />
                 </div>
@@ -306,7 +306,7 @@ export default function WidgetSettingsPage() {
         {/* ── Right: Live Preview ───────────────────────────────────────── */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Live Preview</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Preview</h3>
             <span className="text-xs text-muted-foreground">Changes update instantly</span>
           </div>
           <div className="rounded-xl border bg-muted/30 p-6 flex items-start justify-center min-h-[580px]"
@@ -343,7 +343,7 @@ function AiSettingsSection() {
   if (!loaded) return <div className="p-5"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>;
 
   return (
-    <div className="rounded-lg border bg-card p-5 shadow-sm space-y-5">
+    <div className="rounded-xl border border-border/40 bg-card p-5 space-y-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
       <div><h3 className="font-semibold">AI Assistant</h3><p className="text-xs text-muted-foreground">Configure how AI responds to customers</p></div>
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Tone</label>

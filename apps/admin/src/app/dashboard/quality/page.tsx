@@ -114,7 +114,7 @@ function BadgePicker({
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border bg-card p-3 shadow-xl">
+      <div className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-border/40 bg-card p-3" style={{ boxShadow: 'var(--shadow-xl)' }}>
         {Object.entries(BADGE_OPTIONS).map(([type, values]) => (
           <div key={type} className="mb-3 last:mb-0">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -323,14 +323,14 @@ export default function QualityPage() {
       {selectedTicket && (
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSelectedTicket(null)} />
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg overflow-y-auto border-l bg-card shadow-xl">
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg overflow-y-auto border-l bg-card" style={{ boxShadow: 'var(--shadow-xl)' }}>
             {detailLoading && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/80">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             )}
-            <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-card px-6 py-4">
-              <button onClick={() => setSelectedTicket(null)} className="rounded-md p-1 hover:bg-muted"><ArrowLeft className="h-5 w-5" /></button>
+            <div className="sticky top-0 z-10 flex items-center gap-3 bg-card px-6 py-4" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }}>
+              <button onClick={() => setSelectedTicket(null)} className="rounded-lg p-1 hover:bg-muted/40 cursor-pointer transition-colors duration-150"><ArrowLeft className="h-5 w-5" /></button>
               <div className="flex-1">
                 <span className="font-mono text-sm font-bold">{selectedTicket.displayId}</span>
                 <h2 className="text-lg font-semibold leading-tight">{selectedTicket.conversationTitle}</h2>
@@ -420,10 +420,10 @@ export default function QualityPage() {
                   <div className="space-y-2">
                     <textarea value={notesValue} onChange={(e) => setNotesValue(e.target.value)} rows={4} className={cn(inputCls, 'h-auto py-2')} placeholder="Add notes..." />
                     <div className="flex gap-2">
-                      <button onClick={saveNotes} disabled={updatingId === selectedTicket.id} className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                      <button onClick={saveNotes} disabled={updatingId === selectedTicket.id} className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 cursor-pointer transition-colors duration-150">
                         {updatingId === selectedTicket.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />} Save
                       </button>
-                      <button onClick={() => { setEditingNotes(false); setNotesValue(selectedTicket.notes ?? ''); }} className="rounded-md px-3 py-1.5 text-xs font-medium hover:bg-muted">Cancel</button>
+                      <button onClick={() => { setEditingNotes(false); setNotesValue(selectedTicket.notes ?? ''); }} className="rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-muted/40 cursor-pointer transition-colors duration-150">Cancel</button>
                     </div>
                   </div>
                 ) : (
@@ -441,14 +441,14 @@ export default function QualityPage() {
                   <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xls,.xlsx" />
                 </div>
                 {selectedTicket.attachments.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 rounded-lg border-2 border-dashed border-muted p-6 text-center">
+                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border/60 p-6 text-center">
                     <Paperclip className="h-6 w-6 text-muted-foreground/40" />
                     <p className="text-sm text-muted-foreground">No attachments</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {selectedTicket.attachments.map((att) => (
-                      <div key={att.id} className="flex items-center gap-3 rounded-lg border p-3">
+                      <div key={att.id} className="flex items-center gap-3 rounded-xl border border-border/40 p-3">
                         {att.mimeType.startsWith('image/') ? (
                           <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded border"><img src={att.url} alt={att.originalName} className="h-full w-full object-cover" /></div>
                         ) : (
@@ -475,10 +475,10 @@ export default function QualityPage() {
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setShowCreate(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-lg border bg-card p-6 shadow-xl">
-              <div className="flex items-center justify-between mb-4">
+            <div className="w-full max-w-md rounded-xl border border-border/40 bg-card p-6 animate-scale-in" style={{ boxShadow: 'var(--shadow-xl)' }}>
+              <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-semibold">New Quality Ticket</h3>
-                <button onClick={() => setShowCreate(false)} className="rounded-md p-1 hover:bg-muted"><X className="h-4 w-4" /></button>
+                <button onClick={() => setShowCreate(false)} className="rounded-lg p-1 hover:bg-muted/40 cursor-pointer transition-colors duration-150"><X className="h-4 w-4" /></button>
               </div>
               <div className="space-y-4">
                 <div className="space-y-1"><label className="text-sm font-medium">Conversation Title *</label><input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="e.g. Cannot access billing portal" className={inputCls} /></div>
@@ -488,7 +488,7 @@ export default function QualityPage() {
                   <div className="space-y-1"><label className="text-sm font-medium">Severity</label><select value={newSeverity} onChange={(e) => setNewSeverity(e.target.value)} className={inputCls}>{SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
                 </div>
                 <div className="space-y-1"><label className="text-sm font-medium">Notes</label><textarea value={newNotes} onChange={(e) => setNewNotes(e.target.value)} rows={3} placeholder="Optional..." className={cn(inputCls, 'h-auto py-2')} /></div>
-                <button onClick={createTicket} disabled={creating} className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
+                <button onClick={createTicket} disabled={creating} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 cursor-pointer transition-colors duration-150">
                   {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {creating ? 'Creating...' : 'Create Ticket'}
                 </button>
               </div>
@@ -513,19 +513,19 @@ export default function QualityPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" value={search} onChange={(e) => handleSearch(e.target.value)} placeholder="Search quality tickets..." className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
+          <input type="text" value={search} onChange={(e) => handleSearch(e.target.value)} placeholder="Search quality tickets..." className="flex h-10 w-full rounded-lg border border-input bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10" />
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowFilters(!showFilters)} className={cn('inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted', hasFilters && 'border-primary text-primary')}>
+          <button onClick={() => setShowFilters(!showFilters)} className={cn('inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted/40 cursor-pointer transition-colors duration-150', hasFilters && 'border-primary text-primary')}>
             <Filter className="h-4 w-4" /> Filters
             {hasFilters && <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{[filterStatus, filterSeverity, filterType].filter(Boolean).length}</span>}
           </button>
-          <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"><Plus className="h-4 w-4" /> New Ticket</button>
+          <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 cursor-pointer transition-colors duration-150"><Plus className="h-4 w-4" /> New Ticket</button>
         </div>
       </div>
 
       {showFilters && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/40 bg-card p-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={cn(inputCls, 'w-40')}><option value="">All Statuses</option>{STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}</select>
           <select value={filterSeverity} onChange={(e) => setFilterSeverity(e.target.value)} className={cn(inputCls, 'w-40')}><option value="">All Severities</option>{SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}</select>
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className={cn(inputCls, 'w-48')}><option value="">All Types</option>{TICKET_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select>
@@ -534,27 +534,27 @@ export default function QualityPage() {
       )}
 
       {/* ── Table ───────────────────────────────────────────────────────────── */}
-      <div className="rounded-lg border bg-card shadow-sm">
+      <div className="rounded-xl border border-border/40 bg-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
         {loading ? (
           <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : tickets.length === 0 ? (
-          <div className="flex h-48 flex-col items-center justify-center gap-2"><CheckCircle2 className="h-8 w-8 text-muted-foreground/40" /><p className="text-sm text-muted-foreground">No tickets found</p></div>
+          <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60"><CheckCircle2 className="h-8 w-8 text-muted-foreground/40" /><p className="text-sm text-muted-foreground">No tickets found</p></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Conversation</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Agent</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Badges</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Created</th>
+                <tr className="bg-muted/50" style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">ID</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Conversation</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Agent</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Badges</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Created</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody>
                 {tickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => openDetail(ticket)}>
+                  <tr key={ticket.id} className="hover:bg-muted/30 cursor-pointer transition-colors duration-150" style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }} onClick={() => openDetail(ticket)}>
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-mono font-medium">
                       {ticket.displayId}
                       {ticket.attachments.length > 0 && <Paperclip className="ml-1.5 inline h-3 w-3 text-muted-foreground" />}

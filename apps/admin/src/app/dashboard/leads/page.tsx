@@ -164,7 +164,7 @@ export default function LeadsPage() {
     if (!intent) return <span className="text-xs text-muted-foreground">-</span>;
     const c = intentCfg[intent] ?? intentCfg['Exploring'];
     return (
-      <span className={cn('inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium', c.bg, c.color)}>
+      <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium', c.bg, c.color)}>
         <Sparkles className="h-3 w-3" />{intent}
       </span>
     );
@@ -196,10 +196,10 @@ export default function LeadsPage() {
       {selectedLead && (
         <>
           <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setSelectedLead(null)} />
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg overflow-y-auto border-l bg-card shadow-xl">
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg overflow-y-auto border-l bg-card" style={{ boxShadow: 'var(--shadow-xl)' }}>
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-card px-6 py-4">
-              <button onClick={() => setSelectedLead(null)} className="rounded-md p-1 hover:bg-muted"><ArrowLeft className="h-5 w-5" /></button>
+            <div className="sticky top-0 z-10 flex items-center gap-3 bg-card px-6 py-4" style={{ borderBottom: '1px solid hsl(var(--border) / 0.4)' }}>
+              <button onClick={() => setSelectedLead(null)} className="rounded-lg p-1 hover:bg-muted/40 cursor-pointer transition-colors duration-150"><ArrowLeft className="h-5 w-5" /></button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold truncate">{selectedLead.name}</h2>
@@ -209,7 +209,7 @@ export default function LeadsPage() {
                   {selectedLead.email && <span className="text-xs text-muted-foreground truncate">{selectedLead.email}</span>}
                 </div>
               </div>
-              <button onClick={() => deleteLead(selectedLead.id)} className="rounded-md p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => deleteLead(selectedLead.id)} className="rounded-lg p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors duration-150"><Trash2 className="h-4 w-4" /></button>
             </div>
 
             {/* Pipeline */}
@@ -232,7 +232,7 @@ export default function LeadsPage() {
 
             <div className="space-y-5 p-6">
               {/* AI Insights card */}
-              <div className="rounded-lg border bg-gradient-to-br from-violet-50/50 to-blue-50/50 dark:from-violet-950/20 dark:to-blue-950/20 p-4 space-y-3">
+              <div className="rounded-xl border border-border/40 bg-gradient-to-br from-violet-50/50 to-blue-50/50 dark:from-violet-500/10 dark:to-blue-500/10 p-5 space-y-3">
                 <div className="flex items-center gap-2">
                   <Brain className="h-4 w-4 text-violet-600" />
                   <p className="text-xs font-semibold uppercase tracking-wider text-violet-600">AI Insights</p>
@@ -268,7 +268,7 @@ export default function LeadsPage() {
 
               {/* Conversation */}
               {selectedLead.conversationId && (
-                <div className="rounded-lg border p-4 space-y-3">
+                <div className="rounded-xl border border-border/40 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -299,7 +299,7 @@ export default function LeadsPage() {
                         className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
                         <Check className="h-3 w-3" /> Save
                       </button>
-                      <button onClick={() => { setEditNotes(false); setNotesVal(selectedLead.notes ?? ''); }} className="rounded-md px-3 py-1.5 text-xs font-medium hover:bg-muted">Cancel</button>
+                      <button onClick={() => { setEditNotes(false); setNotesVal(selectedLead.notes ?? ''); }} className="rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-muted/40 cursor-pointer transition-colors duration-150">Cancel</button>
                     </div>
                   </div>
                 ) : (
@@ -309,13 +309,13 @@ export default function LeadsPage() {
 
               {/* Actions */}
               {selectedLead.status !== 'converted' && selectedLead.status !== 'lost' && (
-                <div className="flex gap-2 pt-2 border-t">
+                <div className="flex gap-2 pt-2" style={{ borderTop: '1px solid hsl(var(--border) / 0.4)' }}>
                   <button onClick={() => updateLead(selectedLead.id, { status: 'lost' })}
-                    className="flex-1 rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+                    className="flex-1 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 cursor-pointer transition-colors duration-150">
                     Mark Lost
                   </button>
                   <button onClick={() => updateLead(selectedLead.id, { status: 'converted' })}
-                    className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 cursor-pointer transition-colors duration-150">
                     Convert
                   </button>
                 </div>
@@ -340,7 +340,7 @@ export default function LeadsPage() {
             <span className="text-sm font-semibold">{totalLeads}</span>
             <span className="text-xs text-muted-foreground">total</span>
           </div>
-          <div className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-950/30">
+          <div className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-900 dark:bg-emerald-500/10">
             <TrendingUp className="h-4 w-4 text-emerald-600" />
             <span className="text-sm font-semibold text-emerald-700">{highIntent}</span>
             <span className="text-xs text-emerald-600">high intent</span>
@@ -360,7 +360,7 @@ export default function LeadsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input type="text" value={search} onChange={e => handleSearch(e.target.value)}
             placeholder="Search by name or email..."
-            className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
+            className="flex h-10 w-full rounded-lg border border-input bg-background pl-10 pr-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10" />
         </div>
         <div className="flex items-center gap-2">
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={cn(inputCls, 'w-32')}>
@@ -384,9 +384,9 @@ export default function LeadsPage() {
       {loading ? (
         <div className="flex h-48 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : (
-        <div className="rounded-lg border bg-card shadow-sm">
+        <div className="rounded-xl border border-border/40 bg-card" style={{ boxShadow: 'var(--shadow-sm)' }}>
           {leads.length === 0 ? (
-            <div className="flex h-48 flex-col items-center justify-center gap-2">
+            <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60">
               <Sparkles className="h-8 w-8 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">No leads yet. Leads appear automatically when visitors chat.</p>
             </div>
@@ -394,29 +394,30 @@ export default function LeadsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Lead</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Intent</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Score</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">AI Summary</th>
-                    <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Msgs</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Activity</th>
+                  <tr className="bg-muted/50" style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Lead</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Intent</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Score</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground hidden lg:table-cell">AI Summary</th>
+                    <th className="px-4 py-3 text-center text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Msgs</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Activity</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody>
                   {leads.map(lead => {
                     const isHigh = lead.score >= 70;
                     return (
                       <tr key={lead.id}
-                        className={cn('cursor-pointer transition-colors hover:bg-muted/40', isHigh && 'bg-emerald-50/30 dark:bg-emerald-950/10')}
+                        style={{ borderBottom: '1px solid hsl(var(--border) / 0.25)' }}
+                        className={cn('cursor-pointer hover:bg-muted/30 transition-colors duration-150', isHigh && 'bg-emerald-50/30 dark:bg-emerald-500/10')}
                         onClick={() => openDetail(lead)}>
                         {/* Lead */}
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold',
-                              isHigh ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300'
+                              isHigh ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
                                      : 'bg-muted text-muted-foreground',
                             )}>
                               {lead.name.charAt(0).toUpperCase()}

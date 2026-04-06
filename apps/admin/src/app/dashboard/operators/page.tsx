@@ -67,9 +67,9 @@ const statusBgColors: Record<string, string> = {
 };
 
 const roleBadgeColors: Record<string, string> = {
-  admin: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-  manager: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  agent: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  admin: 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300',
+  manager: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
+  agent: 'bg-gray-100 text-gray-700 dark:bg-gray-500/10 dark:text-gray-300',
 };
 
 export default function OperatorsPage() {
@@ -157,19 +157,20 @@ export default function OperatorsPage() {
   }, [searchInput]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-1">
       {/* Toast notification */}
       {toast && (
         <div
           className={cn(
-            'fixed right-4 top-4 z-[100] flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-all',
+            'fixed right-4 top-4 z-[100] flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-all',
             toast.type === 'success'
               ? 'bg-green-600 text-white'
               : 'bg-red-600 text-white'
           )}
+          style={{ boxShadow: 'var(--shadow-xl)' }}
         >
           {toast.message}
-          <button onClick={() => setToast(null)}>
+          <button onClick={() => setToast(null)} className="cursor-pointer rounded-lg p-0.5 hover:bg-white/20 transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -190,7 +191,7 @@ export default function OperatorsPage() {
               setEditingOperator(null);
               setShowModal(true);
             }}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Operator
@@ -207,17 +208,17 @@ export default function OperatorsPage() {
             placeholder="Search by name or email..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex h-10 w-full rounded-lg border border-input bg-background pl-10 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
           />
         </div>
 
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
-            'inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors',
+            'cursor-pointer inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
             showFilters || roleFilter || statusFilter
               ? 'border-primary bg-primary/10 text-primary'
-              : 'border-input hover:bg-muted'
+              : 'border-input hover:bg-muted/50'
           )}
         >
           <Filter className="h-4 w-4" />
@@ -232,13 +233,13 @@ export default function OperatorsPage() {
 
       {/* Filter pills */}
       {showFilters && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border/40 bg-card p-5" style={{ boxShadow: 'var(--shadow-sm)' }}>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Role</label>
             <select
               value={roleFilter}
               onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 cursor-pointer rounded-lg border border-input bg-background px-3 text-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/10 focus:outline-none"
             >
               <option value="">All roles</option>
               <option value="admin">Admin</option>
@@ -251,7 +252,7 @@ export default function OperatorsPage() {
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 cursor-pointer rounded-lg border border-input bg-background px-3 text-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/10 focus:outline-none"
             >
               <option value="">All statuses</option>
               <option value="online">Online</option>
@@ -273,20 +274,20 @@ export default function OperatorsPage() {
 
       {/* Loading state */}
       {loading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-lg border bg-card p-6">
+            <div key={i} className="animate-pulse rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-muted" />
                 <div className="space-y-2">
-                  <div className="h-4 w-24 rounded bg-muted" />
-                  <div className="h-3 w-16 rounded bg-muted" />
+                  <div className="h-4 w-24 rounded-lg bg-muted" />
+                  <div className="h-3 w-16 rounded-lg bg-muted" />
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 border-t pt-4">
-                <div className="h-10 rounded bg-muted" />
-                <div className="h-10 rounded bg-muted" />
-                <div className="h-10 rounded bg-muted" />
+              <div className="mt-4 grid grid-cols-3 gap-2 pt-4" style={{ borderTop: '1px solid hsl(var(--border) / 0.25)' }}>
+                <div className="h-10 rounded-lg bg-muted" />
+                <div className="h-10 rounded-lg bg-muted" />
+                <div className="h-10 rounded-lg bg-muted" />
               </div>
             </div>
           ))}
@@ -295,11 +296,11 @@ export default function OperatorsPage() {
 
       {/* Error state */}
       {error && !loading && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+        <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-sm text-destructive">{error}</p>
           <button
             onClick={fetchOperators}
-            className="mt-2 text-sm font-medium text-primary hover:underline"
+            className="cursor-pointer mt-2 text-sm font-medium text-primary hover:underline"
           >
             Retry
           </button>
@@ -308,8 +309,8 @@ export default function OperatorsPage() {
 
       {/* Empty state */}
       {!loading && !error && operators.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border bg-card p-12">
-          <Users className="h-12 w-12 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-card p-12">
+          <Users className="h-12 w-12 text-muted-foreground/60" />
           <h3 className="mt-4 text-lg font-semibold">No operators found</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {search || roleFilter || statusFilter
@@ -319,7 +320,7 @@ export default function OperatorsPage() {
           {canManage && !search && !roleFilter && !statusFilter && (
             <button
               onClick={() => setShowModal(true)}
-              className="mt-4 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              className="cursor-pointer mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               <Plus className="h-4 w-4" />
               Add Operator
@@ -330,15 +331,16 @@ export default function OperatorsPage() {
 
       {/* Operator cards */}
       {!loading && !error && operators.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {operators.map((operator) => (
             <div
               key={operator.id}
               onClick={() => router.push(`/dashboard/operators/${operator.id}`)}
               className={cn(
-                'group relative cursor-pointer rounded-lg border bg-card p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/30 hover:-translate-y-0.5',
+                'group relative cursor-pointer rounded-xl border border-border/40 bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:-translate-y-0.5',
                 !operator.active && 'opacity-60'
               )}
+              style={{ boxShadow: 'var(--shadow-sm)' }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -381,7 +383,7 @@ export default function OperatorsPage() {
                         e.stopPropagation();
                         setActionMenuId(actionMenuId === operator.id ? null : operator.id);
                       }}
-                      className="rounded-md p-1 hover:bg-muted"
+                      className="cursor-pointer rounded-lg p-1 hover:bg-muted/50 transition-colors duration-150"
                     >
                       <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
                     </button>
@@ -395,7 +397,7 @@ export default function OperatorsPage() {
                             setActionMenuId(null);
                           }}
                         />
-                        <div className="absolute right-0 z-50 mt-1 w-40 rounded-md border bg-card py-1 shadow-lg">
+                        <div className="absolute right-0 z-50 mt-1 w-40 rounded-xl border border-border/40 bg-card py-1" style={{ boxShadow: 'var(--shadow-xl)' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -403,7 +405,7 @@ export default function OperatorsPage() {
                               setShowModal(true);
                               setActionMenuId(null);
                             }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
+                            className="cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted/30 transition-colors duration-150"
                           >
                             <Edit className="h-4 w-4" />
                             Edit
@@ -414,7 +416,7 @@ export default function OperatorsPage() {
                                 e.stopPropagation();
                                 handleDeactivate(operator);
                               }}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-muted"
+                              className="cursor-pointer flex w-full items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-muted/30 transition-colors duration-150"
                             >
                               <UserX className="h-4 w-4" />
                               Deactivate
@@ -447,14 +449,14 @@ export default function OperatorsPage() {
                   {operator.status}
                 </span>
                 {!operator.active && (
-                  <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300">
                     Inactive
                   </span>
                 )}
               </div>
 
               {/* Stats */}
-              <div className="mt-4 grid grid-cols-3 gap-2 border-t pt-4">
+              <div className="mt-4 grid grid-cols-3 gap-2 pt-4" style={{ borderTop: '1px solid hsl(var(--border) / 0.25)' }}>
                 <div className="text-center">
                   <p className="text-lg font-bold">{operator.stats.activeConversations}</p>
                   <p className="text-xs text-muted-foreground">Active</p>
@@ -477,7 +479,7 @@ export default function OperatorsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t pt-4">
+        <div className="flex items-center justify-between pt-5" style={{ borderTop: '1px solid hsl(var(--border) / 0.25)' }}>
           <p className="text-sm text-muted-foreground">
             Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
           </p>
@@ -485,7 +487,7 @@ export default function OperatorsPage() {
             <button
               onClick={() => setPage(page - 1)}
               disabled={page <= 1}
-              className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm disabled:opacity-50 hover:bg-muted"
+              className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-border/40 px-3 py-1.5 text-sm disabled:opacity-50 hover:bg-muted/30 transition-colors duration-150"
             >
               <ChevronLeft className="h-4 w-4" />
               Previous
@@ -496,7 +498,7 @@ export default function OperatorsPage() {
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages}
-              className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm disabled:opacity-50 hover:bg-muted"
+              className="cursor-pointer inline-flex items-center gap-1 rounded-lg border border-border/40 px-3 py-1.5 text-sm disabled:opacity-50 hover:bg-muted/30 transition-colors duration-150"
             >
               Next
               <ChevronRight className="h-4 w-4" />
