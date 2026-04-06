@@ -10,8 +10,8 @@ import {
 
 // ── Config ─────────────────────────────────────────────────────────────────
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || '';
 const COMPANY_ID = (typeof window !== 'undefined' && (window as any).__CHATBOX_COMPANY_ID) || process.env.NEXT_PUBLIC_WIDGET_COMPANY_ID || '';
 const IS_EMBEDDED = typeof window !== 'undefined' && !!(window as any).__CHATBOX_EMBEDDED;
 const STORAGE_KEY = 'chatbox_widget_session';

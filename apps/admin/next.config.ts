@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL
   ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '')
-  : 'http://localhost:3001';
+  : process.env.API_URL || 'http://localhost:3001';
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@chatbox/shared-types'],
