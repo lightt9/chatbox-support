@@ -1,7 +1,6 @@
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DB_POOL } from '../../config/database.module';
 import { AiService, ChatMessage } from '../ai/ai.service';
-import { ChatGateway } from './chat.gateway';
 
 interface ChatResponse {
   conversationId: string;
@@ -38,10 +37,11 @@ Also respond with "[ESCALATE]" if the user seems frustrated or the question is a
 export class ChatService {
   private readonly logger = new Logger(ChatService.name);
 
+  private gateway: any = null;
+
   constructor(
     @Inject(DB_POOL) private readonly pool: any,
     private readonly aiService: AiService,
-    @Optional() private readonly gateway: ChatGateway,
   ) {}
 
   async handleMessage(

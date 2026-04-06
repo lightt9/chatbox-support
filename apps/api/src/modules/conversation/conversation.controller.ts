@@ -15,16 +15,16 @@ import { ConversationService } from './conversation.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AiService, ChatMessage } from '../ai/ai.service';
 import { DB_POOL } from '../../config/database.module';
-import { Inject, Optional } from '@nestjs/common';
-import { ChatGateway } from '../chat/chat.gateway';
+import { Inject } from '@nestjs/common';
 
 @Controller('api/v1/conversations')
 @UseGuards(AuthGuard('jwt'))
 export class ConversationController {
+  private chatGateway: any = null;
+
   constructor(
     private readonly conversationService: ConversationService,
     private readonly aiService: AiService,
-    @Optional() private readonly chatGateway: ChatGateway,
     @Inject(DB_POOL) private readonly pool: any,
   ) {}
 
