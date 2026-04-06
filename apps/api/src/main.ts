@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import * as compression from 'compression';
+import compression from 'compression';
 import { join } from 'path';
 import * as fs from 'fs';
 import { AppModule } from './app.module';
@@ -41,7 +41,12 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useWebSocketAdapter(new IoAdapter(app));
+  try {
+    app.useWebSocketAdapter(new IoAdapter(app));
+    console.log('[boot] WebSocket adapter set');
+  } catch (err) {
+    console.error('[boot] WebSocket adapter failed, continuing without it:', err);
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -54,7 +59,9 @@ async function bootstrap() {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  console.log('[boot] calling listen on port ' + port);
+  console.log('[boot] calling init...');
+  await app.init();
+  console.log('[boot] init done, calling listen on port ' + port);
   await app.listen(Number(port), '0.0.0.0');
   console.log('[boot] READY on port ' + port);
 }
