@@ -4,8 +4,9 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: cd apps/api && npm install -g pnpm@10 && cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @chatbox/api build
-    startCommand: cd apps/api && node --dns-result-order=ipv4first dist/main.js
+    rootDir: apps/api
+    buildCommand: npm install -g pnpm@10 && cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @chatbox/api build
+    startCommand: node --dns-result-order=ipv4first dist/main.js
     envVars:
       - key: NODE_ENV
         value: production

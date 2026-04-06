@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
@@ -16,15 +17,22 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
+// Keep process alive
+setInterval(() => {}, 10_000);
+
 async function bootstrap() {
   const port = Number(process.env.PORT || process.env.API_PORT || 3001);
-  console.log('[boot] port=' + port + ' node=' + process.version + ' env=' + process.env.NODE_ENV);
+  console.log('[boot] port=' + port + ' node=' + process.version);
+  console.log('[boot] JWT_SECRET set=' + !!process.env.JWT_SECRET);
+  console.log('[boot] DATABASE_URL set=' + !!process.env.DATABASE_URL);
 
   console.log('[boot] creating app...');
+  const t0 = Date.now();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log'],
+    abortOnError: true,
   });
-  console.log('[boot] app created OK');
+  console.log('[boot] app created in ' + (Date.now() - t0) + 'ms');
 
   const uploadsDir = join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -49,6 +57,7 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  console.log('[boot] calling listen...');
   await app.listen(port, '0.0.0.0');
   console.log('[boot] READY on port ' + port);
 }
