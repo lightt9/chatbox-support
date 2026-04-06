@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import compression from 'compression';
 import { join } from 'path';
@@ -17,58 +17,57 @@ process.on('unhandledRejection', (reason) => {
   console.error('[FATAL] unhandledRejection:', reason);
   process.exit(1);
 });
-process.on('exit', (code) => {
-  console.error('[FATAL] process.exit called with code:', code);
-  console.trace('[FATAL] exit trace');
-});
+
+// Keep-alive: prevent event loop from draining during startup
+const keepAlive = setInterval(() => {}, 30_000);
 
 async function bootstrap() {
   const port = process.env.PORT || process.env.API_PORT || 3001;
   console.log('[boot] port=' + port + ' node_env=' + process.env.NODE_ENV);
-  console.log('[boot] db set=' + !!process.env.DATABASE_URL);
-  console.log('[boot] ws disabled=' + (process.env.DISABLE_WEBSOCKET === 'true'));
+  console.log('[boot] db=' + !!process.env.DATABASE_URL + ' ws_disabled=' + (process.env.DISABLE_WEBSOCKET === 'true'));
 
-  console.log('[boot] creating app...');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    abortOnError: true,
-    bufferLogs: false,
-  });
-  console.log('[boot] app created');
+  try {
+    console.log('[boot] creating app...');
+    const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    console.log('[boot] app created OK');
 
-  const uploadsDir = join(process.cwd(), 'uploads');
-  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-  app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
+    const uploadsDir = join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
 
-  app.use(compression());
+    app.use(compression());
 
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-  });
+    app.enableCors({
+      origin: process.env.CORS_ORIGIN || '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: true,
+    });
 
-  if (process.env.DISABLE_WEBSOCKET !== 'true') {
-    app.useWebSocketAdapter(new IoAdapter(app));
-    console.log('[boot] WebSocket adapter set');
+    if (process.env.DISABLE_WEBSOCKET !== 'true') {
+      app.useWebSocketAdapter(new IoAdapter(app));
+      console.log('[boot] WebSocket adapter set');
+    }
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+      }),
+    );
+
+    app.useGlobalFilters(new HttpExceptionFilter());
+
+    console.log('[boot] calling listen on port ' + port);
+    await app.listen(Number(port), '0.0.0.0');
+    clearInterval(keepAlive);
+    console.log('[boot] READY on port ' + port);
+  } catch (err) {
+    clearInterval(keepAlive);
+    console.error('[boot] FATAL bootstrap error:', err);
+    process.exit(1);
   }
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
-
-  app.useGlobalFilters(new HttpExceptionFilter());
-
-  console.log('[boot] calling listen on port ' + port);
-  await app.listen(Number(port), '0.0.0.0');
-  console.log('[boot] READY on port ' + port);
 }
 
-bootstrap().catch((err) => {
-  console.error('[boot] FATAL:', err);
-  process.exit(1);
-});
+bootstrap();
