@@ -23,21 +23,20 @@ async function bootstrap() {
   const port = Number(process.env.PORT || process.env.API_PORT || 3001);
   console.log('[boot] port=' + port + ' env=' + process.env.NODE_ENV);
 
-  // Create express instance and listen IMMEDIATELY
+  // Express listens immediately
   const expressApp = express();
   expressApp.get('/health', (_req: any, res: any) => res.json({ status: 'ok' }));
-
-  const server = expressApp.listen(port, '0.0.0.0', () => {
-    console.log('[boot] express listening on port ' + port);
+  expressApp.listen(port, '0.0.0.0', () => {
+    console.log('[boot] express on port ' + port);
   });
 
-  // Create NestJS on top of the same express instance
-  console.log('[boot] creating NestJS app...');
+  // Create NestJS with full debug logging
+  console.log('[boot] NestFactory.create...');
   const adapter = new ExpressAdapter(expressApp);
   const app = await NestFactory.create<NestExpressApplication>(AppModule, adapter, {
-    logger: ['error', 'warn', 'log'],
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
   });
-  console.log('[boot] NestJS app created');
+  console.log('[boot] create done');
 
   const uploadsDir = join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -58,9 +57,9 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  console.log('[boot] initializing Nest routes...');
+  console.log('[boot] app.init...');
   await app.init();
-  console.log('[boot] READY — all routes live on port ' + port);
+  console.log('[boot] READY');
 }
 
 bootstrap().catch((err) => {
