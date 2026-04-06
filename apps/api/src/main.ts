@@ -18,8 +18,12 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-// Keep-alive: prevent event loop from draining during startup
+// Keep-alive + startup timeout
 const keepAlive = setInterval(() => {}, 30_000);
+const startupTimeout = setTimeout(() => {
+  console.error('[FATAL] Startup timed out after 60s — killing process');
+  process.exit(1);
+}, 60_000);
 
 async function bootstrap() {
   const port = process.env.PORT || process.env.API_PORT || 3001;
@@ -62,9 +66,11 @@ async function bootstrap() {
     console.log('[boot] calling listen on port ' + port);
     await app.listen(Number(port), '0.0.0.0');
     clearInterval(keepAlive);
+    clearTimeout(startupTimeout);
     console.log('[boot] READY on port ' + port);
   } catch (err) {
     clearInterval(keepAlive);
+    clearTimeout(startupTimeout);
     console.error('[boot] FATAL bootstrap error:', err);
     process.exit(1);
   }
