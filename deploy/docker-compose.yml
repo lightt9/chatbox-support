@@ -39,7 +39,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-chatbox}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-chatbox_prod}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-chatbox}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-chatbox_prod}?sslmode=disable
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
@@ -87,7 +87,7 @@ services:
     working_dir: /app/apps/api
     entrypoint: ["npx", "tsx", "src/database/seed.ts"]
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-chatbox}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-chatbox_prod}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-chatbox}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-chatbox_prod}?sslmode=disable
     depends_on:
       postgres:
         condition: service_healthy
