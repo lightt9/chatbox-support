@@ -14,7 +14,7 @@ services:
       - key: DISABLE_WEBSOCKET
         value: "true"
       - key: NODE_VERSION
-        value: "20.20.2"
+        value: "22"
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET

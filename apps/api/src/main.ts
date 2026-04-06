@@ -16,21 +16,21 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-// Prevent event loop drain during async NestFactory.create()
-const keepAlive = setInterval(() => {}, 5_000);
-
 async function bootstrap() {
   const port = Number(process.env.PORT || process.env.API_PORT || 3001);
-  console.log('[boot] port=' + port + ' env=' + process.env.NODE_ENV);
+  console.log('[boot] port=' + port + ' node=' + process.version + ' env=' + process.env.NODE_ENV);
 
+  console.log('[boot] creating app...');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
+  console.log('[boot] app created OK');
 
   const uploadsDir = join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
   app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
   app.use(compression());
+
   const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
     origin: corsOrigin ? corsOrigin.split(',').map((s) => s.trim()) : true,
@@ -38,6 +38,7 @@ async function bootstrap() {
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -49,7 +50,6 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen(port, '0.0.0.0');
-  clearInterval(keepAlive);
   console.log('[boot] READY on port ' + port);
 }
 
