@@ -1,19 +1,22 @@
 services:
   - type: web
     name: chatbox-api
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: node
     plan: free
     region: oregon
+    buildCommand: cd apps/api && npm install -g pnpm@10 && cd ../.. && pnpm install --no-frozen-lockfile && pnpm --filter @chatbox/api build
+    startCommand: cd apps/api && node --dns-result-order=ipv4first dist/main.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DISABLE_WEBSOCKET
-        value: "true"
       - key: PORT
         value: "10000"
+      - key: DISABLE_WEBSOCKET
+        value: "true"
+      - key: NODE_VERSION
+        value: "20.20.2"
       - key: DATABASE_URL
-        sync: false  # Set manually in Render dashboard (Neon connection string)
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
@@ -25,8 +28,8 @@ services:
       - key: ENCRYPTION_KEY
         generateValue: true
       - key: CORS_ORIGIN
-        sync: false  # Set to your Vercel frontend URL
+        sync: false
       - key: API_URL
-        sync: false  # Set to https://chatbox-api.onrender.com
+        sync: false
       - key: ADMIN_URL
-        sync: false  # Set to your Vercel frontend URL
+        sync: false

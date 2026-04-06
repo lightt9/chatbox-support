@@ -39,4 +39,4 @@ RUN mkdir -p /app/apps/api/uploads
 ENV NODE_ENV=production
 
 WORKDIR /app/apps/api
-CMD ["node", "dist/main"]
+CMD ["node", "--dns-result-order=ipv4first", "dist/main"]
