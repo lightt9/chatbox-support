@@ -39,22 +39,22 @@ export function LeadsSummary({ data, loading = false }: LeadsSummaryProps) {
       label: 'Total Leads',
       value: data.totalLeads.toString(),
       icon: Users,
-      color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-50 dark:bg-blue-500/10',
+      color: 'text-indigo-600 dark:text-indigo-400',
+      bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
     },
     {
       label: 'New Today',
       value: data.newLeadsToday.toString(),
       icon: UserPlus,
-      color: 'text-green-600 dark:text-green-400',
-      bgColor: 'bg-green-50 dark:bg-green-500/10',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
     },
     {
       label: 'Conversion Rate',
       value: `${data.conversionRate}%`,
       icon: TrendingUp,
-      color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-50 dark:bg-purple-500/10',
+      color: 'text-violet-600 dark:text-violet-400',
+      bgColor: 'bg-violet-50 dark:bg-violet-500/10',
     },
     {
       label: 'From Chat',
@@ -66,9 +66,9 @@ export function LeadsSummary({ data, loading = false }: LeadsSummaryProps) {
   ];
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
+    <div className="card-gradient p-6">
       <div className="mb-5 flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Leads</h3>
+        <h3 className="section-header">Leads</h3>
         <a
           href="/dashboard/leads"
           className="group flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
@@ -83,7 +83,7 @@ export function LeadsSummary({ data, loading = false }: LeadsSummaryProps) {
           return (
             <div
               key={item.label}
-              className="rounded-xl bg-muted/30 p-3.5 transition-colors hover:bg-muted/50"
+              className="rounded-xl bg-muted/25 p-3.5 transition-all duration-200 hover:bg-muted/45 hover:shadow-sm"
             >
               <div className="flex items-center gap-2.5">
                 <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg', item.bgColor)}>

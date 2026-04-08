@@ -39,8 +39,8 @@ export function LiveStats({ data, loading = false }: LiveStatsProps) {
       label: 'Active Chats',
       value: data.activeChats,
       icon: MessageCircle,
-      color: 'text-blue-600 dark:text-blue-400',
-      bgColor: 'bg-blue-50 dark:bg-blue-500/10',
+      color: 'text-indigo-600 dark:text-indigo-400',
+      bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
     },
     {
       label: 'Pending',
@@ -53,26 +53,26 @@ export function LiveStats({ data, loading = false }: LiveStatsProps) {
       label: 'Currently Active',
       value: data.currentlyTyping,
       icon: Users,
-      color: 'text-green-600 dark:text-green-400',
-      bgColor: 'bg-green-50 dark:bg-green-500/10',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
     },
     {
       label: 'Agents Online',
       value: data.onlineOperators,
       icon: Headphones,
-      color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-50 dark:bg-purple-500/10',
+      color: 'text-violet-600 dark:text-violet-400',
+      bgColor: 'bg-violet-50 dark:bg-violet-500/10',
     },
   ];
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
+    <div className="card-gradient p-6">
       <div className="mb-5 flex items-center gap-2">
         <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Now</h3>
+        <h3 className="section-header">Live Now</h3>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -81,7 +81,7 @@ export function LiveStats({ data, loading = false }: LiveStatsProps) {
           return (
             <div
               key={stat.label}
-              className="rounded-xl bg-muted/30 p-3.5 transition-colors hover:bg-muted/50"
+              className="rounded-xl bg-muted/25 p-3.5 transition-all duration-200 hover:bg-muted/45 hover:shadow-sm"
             >
               <div className="flex items-center gap-2.5">
                 <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg', stat.bgColor)}>

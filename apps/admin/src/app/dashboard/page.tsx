@@ -25,6 +25,7 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { ActivityFeed } from './components/activity-feed';
 import { AgentPerformance } from './components/agent-performance';
 import { LiveStats } from './components/live-stats';
@@ -136,11 +137,19 @@ const tooltipStyle = {
 
 // ── Pie chart colors ────────────────────────────────────────────────────────
 
-const PIE_COLORS = ['hsl(var(--primary))', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)'];
+const PIE_COLORS = ['hsl(var(--primary))', 'hsl(160, 84%, 39%)', 'hsl(38, 92%, 50%)'];
 
 // ── Main dashboard ──────────────────────────────────────────────────────────
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [period, setPeriod] = useState<Period>('7d');
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
@@ -198,8 +207,8 @@ export default function DashboardPage() {
           value: metrics.activeConversations.toString(),
           change: pctChange(metrics.activeConversations, metrics.previousPeriod.activeConversations),
           icon: MessageSquare,
-          color: 'text-blue-600 dark:text-blue-400',
-          bgColor: 'bg-blue-50 dark:bg-blue-500/10',
+          color: 'text-indigo-600 dark:text-indigo-400',
+          bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
           href: '/dashboard/conversations',
         },
         {
@@ -207,8 +216,8 @@ export default function DashboardPage() {
           value: `${metrics.resolutionRate}%`,
           change: metrics.resolutionRate - metrics.previousPeriod.resolutionRate,
           icon: CheckCircle2,
-          color: 'text-green-600 dark:text-green-400',
-          bgColor: 'bg-green-50 dark:bg-green-500/10',
+          color: 'text-emerald-600 dark:text-emerald-400',
+          bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
         },
         {
           title: 'Escalation Rate',
@@ -224,8 +233,8 @@ export default function DashboardPage() {
           value: formatResponseTime(metrics.avgResponseTime),
           change: pctChange(metrics.previousPeriod.avgResponseTime, metrics.avgResponseTime),
           icon: Clock,
-          color: 'text-purple-600 dark:text-purple-400',
-          bgColor: 'bg-purple-50 dark:bg-purple-500/10',
+          color: 'text-violet-600 dark:text-violet-400',
+          bgColor: 'bg-violet-50 dark:bg-violet-500/10',
         },
         {
           title: 'AI Resolution Rate',
@@ -250,11 +259,13 @@ export default function DashboardPage() {
   return (
     <div className="space-y-7">
       {/* Page header + filter */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {getGreeting()}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Overview of your support operations
+            Here&apos;s what&apos;s happening with your support today.
           </p>
         </div>
         <div className="flex items-center gap-1 rounded-xl border border-border/40 bg-card p-1"
@@ -291,10 +302,9 @@ export default function DashboardPage() {
         {loading ? (
           <div className="lg:col-span-2"><ChartSkeleton /></div>
         ) : (
-          <div className="lg:col-span-2 rounded-xl border border-border/40 bg-card p-6"
-            style={{ boxShadow: 'var(--shadow-sm)' }}>
+          <div className="lg:col-span-2 card-gradient p-6">
             <div className="mb-5">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Conversations Over Time</h3>
+              <h3 className="section-header">Conversations Over Time</h3>
               <p className="mt-0.5 text-xs text-muted-foreground">Daily conversation volume</p>
             </div>
             {chartData.length === 0 ? (
@@ -315,8 +325,8 @@ export default function DashboardPage() {
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="resolvedGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(142,71%,45%)" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="hsl(142,71%,45%)" stopOpacity={0} />
+                        <stop offset="5%" stopColor="hsl(160,84%,39%)" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="hsl(160,84%,39%)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
@@ -325,7 +335,7 @@ export default function DashboardPage() {
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend iconType="circle" iconSize={7} wrapperStyle={{ fontSize: '12px' }} />
                     <Area type="monotone" dataKey="total" name="Total" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#totalGrad)" />
-                    <Area type="monotone" dataKey="resolved" name="Resolved" stroke="hsl(142,71%,45%)" strokeWidth={2} fill="url(#resolvedGrad)" />
+                    <Area type="monotone" dataKey="resolved" name="Resolved" stroke="hsl(160,84%,39%)" strokeWidth={2} fill="url(#resolvedGrad)" />
                     <Area type="monotone" dataKey="escalated" name="Escalated" stroke="hsl(var(--destructive))" strokeWidth={2} fill="transparent" strokeDasharray="5 5" />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -338,8 +348,8 @@ export default function DashboardPage() {
         {loading ? (
           <ChartSkeleton />
         ) : (
-          <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Resolution Breakdown</h3>
+          <div className="card-gradient p-6">
+            <h3 className="section-header">Resolution Breakdown</h3>
             <p className="mt-0.5 text-xs text-muted-foreground">How conversations are resolved</p>
             {pieData.every((d) => d.value === 0) ? (
               <div className="mt-4 flex h-52 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60">

@@ -70,7 +70,7 @@ function AppleIcon() {
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
 const socialBtnClass =
-  'flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none';
+  'flex h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-card text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted/60 hover:border-border active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -144,32 +144,32 @@ export default function LoginPage() {
   };
 
   const inputClass =
-    'flex h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10';
+    'flex h-12 w-full rounded-xl border border-border bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground/50 transition-all duration-200 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/10';
 
   /* ── Render ──────────────────────────────────────────────────────────────── */
   return (
-    <div className="flex min-h-screen bg-[hsl(220,20%,8%)]">
+    <div className="flex min-h-screen bg-[hsl(240,20%,7%)]">
       {/* ─── Left: branding panel ─────────────────────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[460px] flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, hsl(210, 40%, 12%) 0%, hsl(220, 30%, 8%) 100%)' }}>
-        {/* decorative blobs */}
-        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/8 blur-[100px]" />
-        <div className="absolute bottom-20 right-0 h-80 w-80 rounded-full bg-primary/5 blur-[80px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-emerald-500/5 blur-[80px]" />
+      <div className="hidden lg:flex lg:w-[480px] flex-col justify-between p-12 relative overflow-hidden"
+        style={{ background: 'linear-gradient(160deg, hsl(240, 30%, 14%) 0%, hsl(240, 20%, 7%) 100%)' }}>
+        {/* decorative blobs — indigo & violet */}
+        <div className="absolute -top-32 -left-32 h-[28rem] w-[28rem] rounded-full bg-indigo-500/10 blur-[120px]" />
+        <div className="absolute bottom-16 -right-16 h-80 w-80 rounded-full bg-violet-500/8 blur-[100px]" />
+        <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-emerald-500/5 blur-[80px]" />
 
         {/* logo */}
         <div className="relative z-10 flex items-center gap-3">
-          <Logo size={40} color="#ffffff" faceColor="hsl(220, 30%, 10%)" static />
+          <Logo size={40} color="#ffffff" faceColor="hsl(240, 20%, 10%)" static />
           <span className="text-lg font-bold tracking-tight text-white">ChatBox</span>
         </div>
 
         {/* heading */}
         <div className="relative z-10">
-          <h1 className="text-[36px] font-bold leading-[1.15] tracking-tight text-white">
-            Welcome back
+          <h1 className="text-[38px] font-extrabold leading-[1.1] tracking-tight text-white">
+            Welcome<br />back
           </h1>
-          <div className="mt-5 h-1 w-12 rounded-full bg-primary" />
-          <p className="mt-6 text-[15px] leading-relaxed text-white/40">
+          <div className="mt-5 h-1 w-12 rounded-full bg-gradient-to-r from-indigo-400 to-violet-400" />
+          <p className="mt-6 text-[15px] leading-relaxed text-white/35">
             Sign in to continue to your<br />support dashboard.
           </p>
         </div>
@@ -184,18 +184,18 @@ export default function LoginPage() {
       <div className="flex flex-1 items-center justify-center px-6 py-12">
         <div className="w-full max-w-[420px] animate-scale-in">
           {/* Card */}
-          <div className="rounded-2xl bg-white p-8 sm:p-10"
-            style={{ boxShadow: '0 25px 60px -12px rgb(0 0 0 / 0.25)' }}>
+          <div className="rounded-2xl bg-card p-8 sm:p-10"
+            style={{ boxShadow: '0 25px 60px -12px rgb(0 0 0 / 0.3), 0 0 0 1px hsl(240 14% 17% / 0.5)' }}>
             {/* Mobile logo */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <Logo size={36} faceColor="#ffffff" static />
-              <span className="text-lg font-bold tracking-tight text-gray-900">ChatBox</span>
+              <Logo size={36} faceColor="hsl(var(--card))" static />
+              <span className="text-lg font-bold tracking-tight text-foreground">ChatBox</span>
             </div>
 
             {/* Desktop heading */}
             <div className="hidden lg:block mb-8">
-              <h2 className="text-xl font-bold text-gray-900">Sign in</h2>
-              <p className="mt-1 text-sm text-gray-500">Choose your preferred method</p>
+              <h2 className="text-xl font-bold text-foreground">Sign in</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Choose your preferred method</p>
             </div>
 
             {/* ── Social buttons ──────────────────────────────────────────── */}
@@ -241,15 +241,15 @@ export default function LoginPage() {
 
             {/* ── Divider ────────────────────────────────────────────────── */}
             <div className="my-7 flex items-center gap-4">
-              <div className="h-px flex-1 bg-gray-100" />
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">or</span>
-              <div className="h-px flex-1 bg-gray-100" />
+              <div className="h-px flex-1 bg-border/60" />
+              <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">or</span>
+              <div className="h-px flex-1 bg-border/60" />
             </div>
 
             {/* ── Error ──────────────────────────────────────────────────── */}
             {error && (
-              <div className="mb-5 flex items-start gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600 animate-slide-down">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-500 text-[10px] font-bold">!</span>
+              <div className="mb-5 flex items-start gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive animate-slide-down">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive text-[10px] font-bold">!</span>
                 {error}
               </div>
             )}
@@ -257,7 +257,7 @@ export default function LoginPage() {
             {/* ── Form ───────────────────────────────────────────────────── */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="login-email" className="mb-1.5 block text-xs font-medium text-gray-600">Email</label>
+                <label htmlFor="login-email" className="mb-1.5 block text-xs font-medium text-muted-foreground">Email</label>
                 <input
                   id="login-email"
                   type="email"
@@ -270,7 +270,7 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label htmlFor="login-password" className="mb-1.5 block text-xs font-medium text-gray-600">Password</label>
+                <label htmlFor="login-password" className="mb-1.5 block text-xs font-medium text-muted-foreground">Password</label>
                 <div className="relative">
                   <input
                     id="login-password"
@@ -286,7 +286,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
                   </button>
@@ -303,7 +303,7 @@ export default function LoginPage() {
                   className={`flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded-[5px] border-2 transition-all ${
                     rememberMe
                       ? 'border-primary bg-primary'
-                      : 'border-gray-300 bg-white hover:border-gray-400'
+                      : 'border-border bg-background hover:border-muted-foreground/40'
                   }`}
                 >
                   {rememberMe && (
@@ -314,7 +314,7 @@ export default function LoginPage() {
                 </button>
                 <label
                   onClick={() => setRememberMe(!rememberMe)}
-                  className="cursor-pointer select-none text-sm text-gray-500"
+                  className="cursor-pointer select-none text-sm text-muted-foreground"
                 >
                   Remember me
                 </label>

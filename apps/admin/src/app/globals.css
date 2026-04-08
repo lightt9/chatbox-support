@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,36 +7,36 @@
 
 @layer base {
   :root {
-    --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, sans-serif;
 
     /* ── Premium Light Theme ─────────────────────────────────────
-     * Inspired by Stripe / Linear / Vercel
-     * Clean whites, subtle warm grays, generous spacing feel
+     * Indigo-first palette with violet-tinted backgrounds
+     * Inspired by Linear / Stripe / Notion
      */
-    --background: 0 0% 98.5%;
-    --foreground: 224 71% 4%;
+    --background: 250 30% 98%;
+    --foreground: 240 20% 8%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 240 20% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 221.2 83.2% 53.3%;
+    --popover-foreground: 240 20% 8%;
+    --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
-    --primary-hex: #3b82f6;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 9% 20%;
-    --muted: 220 14% 95%;
-    --muted-foreground: 220 9% 44%;
-    --accent: 220 14% 95%;
-    --accent-foreground: 220 9% 20%;
+    --primary-hex: #6366f1;
+    --secondary: 245 14% 96%;
+    --secondary-foreground: 240 9% 20%;
+    --muted: 245 14% 95%;
+    --muted-foreground: 240 9% 44%;
+    --accent: 245 14% 95%;
+    --accent-foreground: 240 9% 20%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --success: 142 71% 45%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: 240 10% 90%;
+    --input: 240 10% 90%;
+    --ring: 239 84% 67%;
     --radius: 0.75rem;
 
     /* Z-index scale */
@@ -74,38 +75,38 @@
    */
 
   .dark {
-    --background: 220 20% 8%;
-    --foreground: 210 20% 95%;
+    --background: 240 20% 7%;
+    --foreground: 240 15% 95%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 210 18% 90%;
+    --card: 240 18% 11%;
+    --card-foreground: 240 15% 90%;
 
-    --popover: 218 18% 16%;
-    --popover-foreground: 210 18% 95%;
+    --popover: 240 18% 15%;
+    --popover-foreground: 240 15% 95%;
 
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 239 84% 67%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 218 18% 14%;
-    --secondary-foreground: 210 16% 90%;
+    --secondary: 240 18% 13%;
+    --secondary-foreground: 240 12% 90%;
 
-    --muted: 218 18% 14%;
-    --muted-foreground: 215 12% 55%;
+    --muted: 240 18% 13%;
+    --muted-foreground: 240 10% 55%;
 
-    --accent: 218 18% 14%;
-    --accent-foreground: 210 16% 90%;
+    --accent: 240 18% 13%;
+    --accent-foreground: 240 12% 90%;
 
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 218 16% 18%;
-    --input: 218 16% 22%;
-    --ring: 217 91% 60%;
+    --border: 240 14% 17%;
+    --input: 240 14% 20%;
+    --ring: 239 84% 67%;
 
     /* Dark mode shadows (subtle glow) */
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
@@ -169,9 +170,34 @@
 
   /* ── Glass Card (subtle glassmorphism) ────────────────────── */
   .card-glass {
-    @apply rounded-xl border border-white/10 backdrop-blur-xl;
-    background: hsl(var(--card) / 0.8);
+    @apply rounded-xl backdrop-blur-xl;
+    background: hsl(var(--card) / 0.7);
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: var(--shadow-sm), inset 0 1px 0 0 rgb(255 255 255 / 0.05);
+  }
+  .dark .card-glass {
+    background: hsl(var(--card) / 0.5);
+    border-color: hsl(var(--border) / 0.3);
+  }
+
+  /* ── Gradient card (subtle gradient background) ──────────── */
+  .card-gradient {
+    @apply rounded-xl border border-border/40 bg-card;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card)) 0%,
+      hsl(var(--primary) / 0.02) 100%
+    );
     box-shadow: var(--shadow-sm);
+  }
+  .card-gradient:hover {
+    box-shadow: var(--shadow-md);
+    border-color: hsl(var(--primary) / 0.15);
+  }
+
+  /* ── Section header with subtle accent ───────────────────── */
+  .section-header {
+    @apply text-sm font-semibold uppercase tracking-wider text-muted-foreground;
   }
 
   /* ── Page Fade-in ─────────────────────────────────────────── */
@@ -238,7 +264,13 @@
   /* ── Text gradient ────────────────────────────────────────── */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(270 70% 55%));
+  }
+
+  /* ── Badge pill ──────────────────────────────────────────── */
+  .badge-primary {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5
+           text-xs font-medium bg-primary/10 text-primary;
   }
 
   /* ── Subtle glow on focus ─────────────────────────────────── */

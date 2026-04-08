@@ -80,6 +80,7 @@ const notificationLabels: { key: keyof NotificationSettings; label: string }[] =
 /* ── Color options ──────────────────────────────────────────────────────────── */
 
 const colorOptions: { value: ColorName; label: string }[] = [
+  { value: 'indigo', label: 'Indigo' },
   { value: 'blue', label: 'Blue' },
   { value: 'purple', label: 'Purple' },
   { value: 'green', label: 'Green' },
@@ -132,7 +133,7 @@ export default function SettingsPage() {
   });
   const [appearance, setAppearance] = useState<AppearanceSettings>({
     theme: 'light',
-    primaryColor: 'blue',
+    primaryColor: 'indigo',
   });
   const [profile, setProfile] = useState<ProfileInfo | null>(null);
 

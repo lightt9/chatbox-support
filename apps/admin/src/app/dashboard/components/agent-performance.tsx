@@ -56,10 +56,10 @@ export function AgentPerformance({ agents, loading = false }: AgentPerformancePr
   if (loading) return <TableSkeleton />;
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
+    <div className="card-gradient p-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Agent Performance</h3>
+          <h3 className="section-header">Agent Performance</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {agents.filter((a) => a.status === 'online').length} agents online
           </p>
@@ -110,7 +110,7 @@ export function AgentPerformance({ agents, loading = false }: AgentPerformancePr
                       className="flex items-center gap-3"
                     >
                       <div className="relative">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-primary/5 text-sm font-semibold text-primary">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-violet-500/10 text-sm font-semibold text-primary">
                           {agent.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                         </div>
                         <span
@@ -134,7 +134,7 @@ export function AgentPerformance({ agents, loading = false }: AgentPerformancePr
                     <span className={cn(
                       'inline-flex min-w-[2rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-medium',
                       agent.activeChats > 0
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400'
                         : 'text-muted-foreground',
                     )}>
                       {agent.activeChats}

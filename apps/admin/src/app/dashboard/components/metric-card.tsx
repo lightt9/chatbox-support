@@ -50,7 +50,7 @@ export function MetricCard({
   const card = (
     <div
       className={cn(
-        'rounded-xl border border-border/40 bg-card p-6 transition-all duration-200',
+        'group relative rounded-xl border border-border/40 bg-card p-6 transition-all duration-200 overflow-hidden',
         href && 'cursor-pointer hover:-translate-y-0.5',
       )}
       style={{ boxShadow: 'var(--shadow-sm)' }}
@@ -59,17 +59,17 @@ export function MetricCard({
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', bgColor)}>
+        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110', bgColor)}>
           <Icon className={cn('h-5 w-5', color)} />
         </div>
       </div>
       <div className="mt-4">
-        <p className="text-3xl font-bold tracking-tight">{value}</p>
-        <div className="mt-1.5 flex items-center gap-1.5">
+        <p className="text-3xl font-extrabold tracking-tight">{value}</p>
+        <div className="mt-2 flex items-center gap-1.5">
           <div className={cn(
-            'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+            'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold',
             isPositive
-              ? 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
               : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400',
           )}>
             {isPositive ? (

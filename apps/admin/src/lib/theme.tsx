@@ -12,7 +12,7 @@ import {
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
 type ThemeName = 'light' | 'dark' | 'system';
-type ColorName = 'blue' | 'purple' | 'green' | 'orange' | 'red' | 'pink';
+type ColorName = 'indigo' | 'blue' | 'purple' | 'green' | 'orange' | 'red' | 'pink';
 
 interface ThemeContextType {
   theme: ThemeName;
@@ -35,6 +35,7 @@ interface ColorDef {
 }
 
 const COLOR_MAP: Record<ColorName, ColorDef> = {
+  indigo: { h: '239',   s: '84%',   l: '67%',   hex: '#6366f1' },
   blue:   { h: '221.2', s: '83.2%', l: '53.3%', hex: '#3b82f6' },
   purple: { h: '262.1', s: '83.3%', l: '57.8%', hex: '#8b5cf6' },
   green:  { h: '142.1', s: '76.2%', l: '36.3%', hex: '#16a34a' },
@@ -61,7 +62,7 @@ function applyThemeClass(theme: ThemeName) {
 }
 
 function applyPrimaryColor(color: ColorName) {
-  const c = COLOR_MAP[color] ?? COLOR_MAP.blue;
+  const c = COLOR_MAP[color] ?? COLOR_MAP.indigo;
   const root = document.documentElement;
   root.style.setProperty('--primary', `${c.h} ${c.s} ${c.l}`);
   root.style.setProperty('--ring', `${c.h} ${c.s} ${c.l}`);
@@ -72,14 +73,14 @@ function applyPrimaryColor(color: ColorName) {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeName>('light');
-  const [primaryColor, setPrimaryColorState] = useState<ColorName>('blue');
+  const [primaryColor, setPrimaryColorState] = useState<ColorName>('indigo');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') ?? 'light';
-    const savedColor = localStorage.getItem('app-primary-color') ?? 'blue';
+    const savedColor = localStorage.getItem('app-primary-color') ?? 'indigo';
     const t = (VALID_THEMES.has(savedTheme) ? savedTheme : 'light') as ThemeName;
-    const c = (VALID_COLORS.has(savedColor) ? savedColor : 'blue') as ColorName;
+    const c = (VALID_COLORS.has(savedColor) ? savedColor : 'indigo') as ColorName;
     setThemeState(t);
     setPrimaryColorState(c);
     applyThemeClass(t);
@@ -109,7 +110,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   if (!mounted) return null;
 
-  const primaryHex = (COLOR_MAP[primaryColor] ?? COLOR_MAP.blue).hex;
+  const primaryHex = (COLOR_MAP[primaryColor] ?? COLOR_MAP.indigo).hex;
 
   return (
     <ThemeContext.Provider value={{ theme, primaryColor, primaryHex, setTheme, setPrimaryColor }}>

@@ -37,18 +37,18 @@ const typeConfig: Record<
 > = {
   conversation_started: {
     icon: MessageSquarePlus,
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-50 dark:bg-blue-500/10',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-indigo-50 dark:bg-indigo-500/10',
   },
   conversation_resolved: {
     icon: CheckCircle2,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-50 dark:bg-green-500/10',
+    color: 'text-emerald-600 dark:text-emerald-400',
+    bgColor: 'bg-emerald-50 dark:bg-emerald-500/10',
   },
   operator_replied: {
     icon: Reply,
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-50 dark:bg-purple-500/10',
+    color: 'text-violet-600 dark:text-violet-400',
+    bgColor: 'bg-violet-50 dark:bg-violet-500/10',
   },
   lead_created: {
     icon: UserPlus,
@@ -80,8 +80,8 @@ export function ActivityFeed({ items, loading = false }: ActivityFeedProps) {
   if (loading) return <FeedSkeleton />;
 
   return (
-    <div className="rounded-xl border border-border/40 bg-card p-6" style={{ boxShadow: 'var(--shadow-sm)' }}>
-      <h3 className="mb-5 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Live Activity</h3>
+    <div className="card-gradient p-6">
+      <h3 className="mb-5 section-header">Live Activity</h3>
 
       {items.length === 0 ? (
         <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60">

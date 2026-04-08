@@ -117,17 +117,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* ── Sidebar ── */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-card transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:static',
+          'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:static',
           collapsed ? 'lg:w-[68px]' : 'lg:w-[250px]',
           mobileOpen ? 'w-[250px] translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         )}
-        style={{ borderRight: '1px solid hsl(var(--border) / 0.4)' }}
+        style={{
+          background: 'hsl(var(--card))',
+          borderRight: '1px solid hsl(var(--border) / 0.4)',
+        }}
       >
         {/* Logo */}
         <div className={cn('flex h-[60px] items-center', collapsed ? 'justify-center px-2' : 'justify-between px-5')}>
           <Link href="/dashboard" className="flex items-center gap-2.5 group" onClick={() => setMobileOpen(false)}>
             <Logo size={28} faceColor="hsl(var(--card))" />
-            {!collapsed && <span className="text-[15px] font-bold tracking-tight transition-colors group-hover:text-primary">ChatBox</span>}
+            {!collapsed && <span className="text-[15px] font-extrabold tracking-tight transition-colors group-hover:text-primary">ChatBox</span>}
           </Link>
           {!collapsed && (
             <button onClick={() => setMobileOpen(false)} className="cursor-pointer rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors lg:hidden">
@@ -137,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
           {filteredNav.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             return (
@@ -147,18 +150,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setMobileOpen(false)}
                 title={collapsed ? item.name : undefined}
                 className={cn(
-                  'group relative flex items-center rounded-lg text-[13px] font-medium transition-all duration-150',
-                  collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2.5',
+                  'group relative flex items-center rounded-xl text-[13px] font-medium transition-all duration-150',
+                  collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2',
                   isActive
-                    ? 'bg-primary/10 text-primary dark:bg-primary/15'
+                    ? 'bg-primary/10 text-primary dark:bg-primary/15 font-semibold'
                     : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground'
                 )}
               >
-                <item.icon className={cn('flex-shrink-0 transition-colors', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]')} />
+                <item.icon className={cn('flex-shrink-0 transition-colors', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]')} strokeWidth={isActive ? 2.2 : 1.8} />
                 {!collapsed && <span>{item.name}</span>}
                 {/* Active indicator — soft glow bar */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]" />
+                  <div className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.5)]" />
                 )}
                 {/* Tooltip for collapsed */}
                 {collapsed && (
@@ -184,8 +187,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
 
           {/* User */}
-          <div className={cn('flex items-center gap-2.5 rounded-lg p-2 transition-colors', collapsed && 'justify-center')}>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-xs font-bold text-primary ring-1 ring-primary/10">
+          <div className={cn('flex items-center gap-2.5 rounded-xl p-2 transition-colors hover:bg-muted/40', collapsed && 'justify-center')}>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/25 to-violet-500/10 text-xs font-bold text-primary ring-1 ring-primary/10">
               {initials}
             </div>
             {!collapsed && (
@@ -250,7 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-[11px] font-bold text-primary ring-1 ring-primary/10">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary/25 to-violet-500/10 text-[11px] font-bold text-primary ring-1 ring-primary/10">
                   {initials}
                 </div>
                 <span className="hidden text-[13px] font-medium md:block">{displayName}</span>
